@@ -1,0 +1,4 @@
+repository "まるとしかく/まるとしかく@15668798402391@cloud"
+  path "/"
+    br "/main"
+    co "/main"
