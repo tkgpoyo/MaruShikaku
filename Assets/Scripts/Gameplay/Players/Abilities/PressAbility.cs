@@ -1,143 +1,128 @@
 using UnityEngine;
 using MaruSikaku.Gameplay.Players.Inputs;
-using MaruSikaku.Gameplay.Players.Visuals;
 using System.Linq;
-using System;
 using System.Collections.Generic;
 using MaruSikaku.Gameplay.Stages.Gimmicks;
-using static MaruSikaku.Gameplay.Players.GroundChecker;
+using System.Collections;
 
 namespace MaruSikaku.Gameplay.Players.Abilities
 {
     public class PressAbility : PlayerAbility
     {
-        private enum EPressState
-        {
-            Idle,
-            StartPress,
-            Pressing,
-            EndPress
-        }
-
         private const float PRESS_STOP_THRE = 0.3f;
-        private const float MIN_INTERSECT_WIDTH = 0.05f;
+        private const string TRIG_PRESS_START = "PressStart";
+        private const string TRIG_PRESS_START_END = "PressStartEnd";
+        private const string TRIG_PRESS_END = "PressEnd";
+        private const string TRIG_PRESS_END_END = "PressEndEnd";
 
-        private EPressState _pressState = EPressState.Idle;
-        private List<Spring> _springs = new();
-
-        [SerializeField] private SikakuVisual _visual;
         [SerializeField] private float _pressSpeed = 10f;
         [SerializeField] private float _maxShiftDistance = 1f;
 
-        void OnEnable()
+        private bool _endRequested = false;
+
+        protected override bool CanStart(PlayerInputData input)
         {
-            _visual.OnLockMove += LockMove;
-            _visual.OnPressStartAnimEnd += PressStart;
-            _visual.OnPressEndAnimEnd += PressEnd;
+            return input.Press;
         }
-
-        void OnDisable()
+        protected override void OnAnticipationStart(PlayerInputData input)
         {
-            _visual.OnPressStartAnimEnd -= PressStart;
-            _visual.OnPressEndAnimEnd -= PressEnd;
+            Context.LockMove(this);
         }
-
-        public override void Tick(PlayerInputData input)
+        protected override IEnumerator Anticipation(PlayerInputData input)
         {
-            if (!input.Press) { return; }
+            yield return new WaitForFixedUpdate();
 
-            switch (_pressState)
-            {
-            case EPressState.Idle:
-                _pressState = EPressState.StartPress;
-                Context.AddSwitchBlocker(ESwitchBlocker.Press);
-                _visual.PressStart();
-                break;
-            case EPressState.Pressing:
-                // プレス中に入力があれば，プレス終了
-                StopPress();
-                break;
-            }
-        }
-
-        public override void FixedTick(PlayerInputData input)
-        {
-            if (_pressState != EPressState.Pressing) { return; }
-
-            var groundContactList = new List<GroundContactData>();      // 地面の接触データ
-
-            foreach (var contactData in Context.GroundContactData)
-            {
-                if (contactData.Collider.TryGetComponent<FragileBlock>(out var fragileBlock))
-                {
-                    fragileBlock.Break();
-                }
-                else if (contactData.Collider.TryGetComponent<Spring>(out var spring))
-                {
-                    StopPress();
-                    // バネにプレスした時は，バネが伸びるまで移動制限
-                    Context.AddMoveBlocker(EMoveBlocker.Spring);
-                    spring.Compress();
-                    _springs.Add(spring);
-                    spring.OnStretch += Bounce;
-                }
-                else
-                {
-                    groundContactList.Add(contactData);
-                }
-            }
-
-            if (!groundContactList.Any())                 // 地面と接触していない場合
-            {
-                Context.RigidBody.linearVelocityY = -_pressSpeed;
-                return;
-            }
-
-            if (groundContactList.Any(data => data.Contact.HasFlag(EContactSide.Left)) && 
-                groundContactList.Any(data => data.Contact.HasFlag(EContactSide.Right)))
-            {
-                StopPress();
-                return;
-            }
-
-            if (groundContactList.Sum(data => data.Overlap) >= PRESS_STOP_THRE)
-            {
-                StopPress();
-                return;
-            }
-
-            if (!TryShiftBesideGround(groundContactList))
-            {
-                StopPress();
-                return;
-            }
-
-            Context.RigidBody.linearVelocityY = -_pressSpeed;
-        }
-
-        private void LockMove()
-        {
-            Context.AddMoveBlocker(EMoveBlocker.Press);
             Context.RigidBody.linearVelocityX = 0f;
-        }
 
-        private void PressStart()
-        {
-            _pressState = EPressState.Pressing;
+            Visual.PlayTrigger(TRIG_PRESS_START);
+            while (!Visual.ConsumeAnimationEvent(TRIG_PRESS_START_END))
+            {
+                yield return null;
+            }
         }
-
-        private void PressEnd()
+        protected override void OnActionStart(PlayerInputData input)
         {
-            _pressState = EPressState.Idle;
-            Context.RemoveMoveBlocker(EMoveBlocker.Press);
-            Context.RemoveSwitchBlocker(ESwitchBlocker.Press);
+            _endRequested = false;
         }
-
-        private void StopPress()
+        protected override IEnumerator Action(PlayerInputData input)
         {
-            _pressState = EPressState.EndPress;
-            _visual.PressEnd();
-            Context.RigidBody.linearVelocityY = 0f;
+            yield return new WaitForFixedUpdate();                          // FixedUpdateと合わせる
+
+            while (!_endRequested)
+            {
+                var groundContactList = new List<GroundContactData>();      // 地面の接触データ
+
+                bool hitSpring = false;
+                foreach (var contactData in Context.GroundContactData)
+                {
+                    if (contactData.Collider.TryGetComponent<FragileBlock>(out var fragileBlock))
+                    {
+                        fragileBlock.Break();
+                    }
+                    else if (contactData.Collider.TryGetComponent<Spring>(out var spring))
+                    {
+                        Context.RigidBody.linearVelocityY = 0f;
+                        spring.Compress(Context);
+                        hitSpring = true;
+                        break;
+                    }
+                    else
+                    {
+                        groundContactList.Add(contactData);
+                    }
+                }
+                if (hitSpring)
+                {
+                    // バネに当たったらプレス終了
+                    break;
+                }
+
+                if (groundContactList.Any(data => data.Contact.HasFlag(EContactSide.Left)) && 
+                    groundContactList.Any(data => data.Contact.HasFlag(EContactSide.Right)))
+                {
+                    // 両側が接している場合、プレスを終了
+                    break;
+                }
+
+                if (groundContactList.Sum(data => data.Overlap) >= PRESS_STOP_THRE)
+                {
+                    // 大部分が地面と接触している場合、プレスを終了
+                    break;
+                }
+
+                if (!TryShiftBesideGround(groundContactList))
+                {
+                    // シフトができない場合、プレスを終了
+                    break;
+                }
+
+                // 何も接触してない場合やシフトできた場合、等速で落下
+                Context.RigidBody.linearVelocityY = -_pressSpeed;
+                yield return new WaitForFixedUpdate();
+            }
+
+            Context.RigidBody.linearVelocityY = 0f;     // プレス終了時にY方向の速度を0にする
+        }
+        protected override IEnumerator Recovery(PlayerInputData input)
+        {
+            Visual.PlayTrigger(TRIG_PRESS_END);
+            while (!Visual.ConsumeAnimationEvent(TRIG_PRESS_END_END))
+            {
+                yield return null;
+            }
+        }
+        protected override void OnFinished()
+        {
+            _endRequested = false;
+            Context.UnlockMove(this);
+        }
+        protected override void OnTickDuringAction(PlayerInputData input)
+        {
+            if (CanStart(input))
+            {
+                // プレス中にプレス入力されれば、現在のプレスを終了
+                _endRequested = true;
+            }
         }
 
         private bool TryShiftBesideGround(ICollection<GroundContactData> contactData)
@@ -174,17 +159,5 @@ namespace MaruSikaku.Gameplay.Players.Abilities
             return true;
         }
 
-        private void Bounce()
-        {
-            var stretchPower = 0f;
-            foreach (var spring in _springs)
-            {
-                spring.OnStretch -= Bounce;
-                stretchPower = Mathf.Max(stretchPower, spring.StretchPower);
-            }
-            Context.RemoveMoveBlocker(EMoveBlocker.Spring);
-            Context.RigidBody.AddForceY(stretchPower, ForceMode2D.Impulse);
-            _springs.Clear();
-        }
     }
 }

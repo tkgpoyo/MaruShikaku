@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using MaruSikaku.Gameplay.Players.Inputs;
 using UnityEngine;
 
@@ -5,15 +7,14 @@ namespace MaruSikaku.Gameplay.Players.Visuals
 {
     [RequireComponent(typeof(SpriteRenderer))]
     [RequireComponent(typeof(Animator))]
-    public abstract class PlayerVisual : MonoBehaviour
+    public class PlayerVisual : MonoBehaviour
     {
         protected const string PARAM_RUN = "Run";
-        protected const string PARAM_FALL = "Fall";
-        protected const string TRIG_SLEEP = "Sleep";
-        protected const string TRIG_WAKE = "Wake";
 
         protected SpriteRenderer _render { get; private set; }
         protected Animator _anim { get; private set; }
+
+        private Dictionary<string, bool> _animationEvents = new();
 
         [SerializeField] protected Transform _directionRoot;
 
@@ -26,11 +27,8 @@ namespace MaruSikaku.Gameplay.Players.Visuals
         public virtual void UpdateVisual(PlayerContext context)
         {
             UpdateFacing(context);
-            UpdateCommonAnimation(context);
             UpdateAnimation(context);
         }
-
-        protected abstract void UpdateAnimation(PlayerContext context);
 
         private void UpdateFacing(PlayerContext context)
         {
@@ -42,20 +40,28 @@ namespace MaruSikaku.Gameplay.Players.Visuals
             };
         }
 
-        private void UpdateCommonAnimation(PlayerContext context)
+        private void UpdateAnimation(PlayerContext context)
         {
-            _anim.SetBool(PARAM_FALL, !context.GroundState.IsGrounded);
             _anim.SetFloat(PARAM_RUN, Mathf.Abs(context.RigidBody.linearVelocityX));
         }
 
-        public void Sleep()
+        public void PlayTrigger(string triggerName)
         {
-            _anim.SetTrigger(TRIG_SLEEP);
+            _anim.SetTrigger(triggerName);
         }
 
-        public void Wake()
+        public void NotifyAnimationEvent(string eventName)
         {
-            _anim.SetTrigger(TRIG_WAKE);
+            _animationEvents[eventName] = true;
+        }
+
+        public bool ConsumeAnimationEvent(string eventName)
+        {
+            if (!_animationEvents.TryGetValue(eventName, out var fired)) { return false; }
+            if (!fired) { return false; }
+
+            _animationEvents[eventName] = false;
+            return true;
         }
     }
 }

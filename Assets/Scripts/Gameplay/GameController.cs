@@ -29,7 +29,7 @@ namespace MaruSikaku.Gameplay
 
         private void Switch()
         {
-            if (!Current.Context.CanSwitch) { return; }
+            if (!Current.CanSwitch) { return; }
 
             _players[_currentIdx].SetActive(false);
             _currentIdx = (_currentIdx + 1) % _players.Length;

@@ -3,90 +3,57 @@ using MaruSikaku.Gameplay.Players.Inputs;
 using MaruSikaku.Gameplay.Players.Visuals;
 using System.Linq;
 using MaruSikaku.Gameplay.Stages.Gimmicks;
+using System.Collections;
 
 namespace MaruSikaku.Gameplay.Players.Abilities
 {
     public class JumpAbility : PlayerAbility
     {
-        private bool _jumpRequested = false;
-        private bool _isJumping = false;
-        private bool _hasLeftGround = false;
+        private const string TRIG_JUMP_START = "JumpStart";
+        private const string TRIG_JUMP_START_END = "JumpStartEnd";
+        private const string TRIG_JUMP_END = "JumpEnd";
+        private const string TRIG_JUMP_END_END = "JumpEndEnd";
 
         [SerializeField] private float _jumpPower = 8f;
-        [SerializeField] private MaruVisual _visual;
 
-        void OnEnable()
+        protected override bool CanStart(PlayerInputData input)
         {
-            _visual.OnJumpStartAnimEnd += Jump;
-            _visual.OnJumpEndAnimEnd += JumpEnd;
+            return input.Jump && Context.GroundState.IsGrounded;
         }
-
-        void OnDisable()
+        protected override IEnumerator Anticipation(PlayerInputData input)
         {
-            _visual.OnJumpStartAnimEnd -= Jump;
-            _visual.OnJumpEndAnimEnd -= JumpEnd;
-        }
-
-        public override void Tick(PlayerInputData input)
-        {
-            _jumpRequested |= input.Jump;       // FixedUpdateまでに1度でもジャンプボタンを押したらOK
-        }
-
-        public override void FixedTick(PlayerInputData input)
-        {
-            if (!Context.IsActive) { return; }
-
-            // ジャンプしていて，着地した時
-            if (_isJumping)
+            Visual.PlayTrigger(TRIG_JUMP_START);
+            while (!Visual.ConsumeAnimationEvent(TRIG_JUMP_START_END))
             {
-                if (!Context.GroundState.IsGrounded)
-                {
-                    _hasLeftGround = true;
-                    return;
-                }
-                if (_hasLeftGround && Context.GroundState.IsGrounded)
-                {
-                    _isJumping = false;
-                    _hasLeftGround = false;
-                    _visual.JumpEnd();
-                    return;
-                }
+                yield return null;
+            }
+        }
+        protected override IEnumerator Action(PlayerInputData input)
+        {
+            yield return new WaitForFixedUpdate();
+
+            Context.RigidBody.linearVelocityY = 0f;
+            Context.RigidBody.AddForceY(_jumpPower, ForceMode2D.Impulse);
+
+            // 地面から離れるまで待機
+            while (Context.GroundState.IsGrounded)
+            {
+                yield return new WaitForFixedUpdate();
             }
 
-            if (!_jumpRequested) { return; }
-            _jumpRequested = false;
-
-            if (!Context.GroundState.IsGrounded) { return; }
-
-            JumpStart();
+            // 地面に着地するまで待機
+            while (!Context.GroundState.IsGrounded)
+            {
+                yield return new WaitForFixedUpdate();
+            }
         }
-
-        public override void OnControlStart()
+        protected override IEnumerator Recovery(PlayerInputData input)
         {
-            _jumpRequested = false;
-        }
-
-        public override void OnControlEnd()
-        {
-            _jumpRequested = false;
-        }
-
-        private void JumpStart()
-        {
-            Context.AddSwitchBlocker(ESwitchBlocker.Jump);
-            _visual.JumpStart();
-        }
-
-        private void Jump()
-        {
-            Context.RigidBody.linearVelocityY = 0f;
-            Context.RigidBody.AddForce(Vector2.up * _jumpPower, ForceMode2D.Impulse);
-            _isJumping = true;
-        }
-
-        private void JumpEnd()
-        {
-            Context.RemoveSwitchBlocker(ESwitchBlocker.Jump);
+            Visual.PlayTrigger(TRIG_JUMP_END);
+            while (!Visual.ConsumeAnimationEvent(TRIG_JUMP_END_END))
+            {
+                yield return null;
+            }
         }
     }
 }
