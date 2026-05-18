@@ -71,19 +71,35 @@ namespace MaruSikaku.Gameplay.Players
             _visual.UpdateVisual(_context);
         }
 
+        public void SetInitialActive(bool isActive)
+        {
+            SetActiveCore(isActive, playWakeTrigger: false);
+        }
+
         public void SetActive(bool isActive)
         {
+            SetActiveCore(isActive, playWakeTrigger: true);
+        }
+
+        private void SetActiveCore(bool isActive, bool playWakeTrigger)
+        {
             _context.IsActive = isActive;
+
             if (isActive)
             {
-                _visual.PlayTrigger(TRIG_WAKE);
+                if (playWakeTrigger)
+                {
+                    _visual.PlayTrigger(TRIG_WAKE);
+                }
+
                 _context.RigidBody.constraints = RigidbodyConstraints2D.FreezeRotation;
                 _standable.enabled = false;
             }
             else
             {
                 _visual.PlayTrigger(TRIG_SLEEP);
-                _context.RigidBody.constraints = RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
+                _context.RigidBody.constraints =
+                    RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezeRotation;
                 _standable.enabled = true;
                 _context.RigidBody.linearVelocityX = 0;
             }

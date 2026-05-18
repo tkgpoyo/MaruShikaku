@@ -17,11 +17,17 @@ namespace MaruSikaku.Gameplay
 
         void Start()
         {
-            foreach (var player in _players)
+            for (var i = 0; i < _players.Length; i++)
             {
-                player.SetActive(false);
+                if (i == _currentIdx)
+                {
+                    _players[i].SetInitialActive(true);
+                }
+                else
+                {
+                    _players[i].SetInitialActive(false);
+                }
             }
-            _players[_currentIdx].SetActive(true);
 
             _handler.OnSwitch += Switch;
             _camera.Initialize(Current);
