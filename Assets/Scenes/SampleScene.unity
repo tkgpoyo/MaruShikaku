@@ -149,6 +149,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2117696094}
+  - {fileID: 1055363777}
   m_Father: {fileID: 2116646024}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &161107289
@@ -248,7 +249,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccd325de7a7c2483c8e80e4cfa035d32, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Stages.Gimmicks.Spring
-  _stretchPower: 15
+  _stretchVelocity: 12
 --- !u!95 &250423790
 Animator:
   serializedVersion: 7
@@ -1474,8 +1475,8 @@ GameObject:
   - component: {fileID: 859617597}
   - component: {fileID: 859617593}
   - component: {fileID: 859617596}
-  - component: {fileID: 859617598}
   - component: {fileID: 859617599}
+  - component: {fileID: 859617600}
   m_Layer: 9
   m_Name: Sikaku
   m_TagString: Untagged
@@ -1515,8 +1516,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   _context: {fileID: 859617596}
   _grdCheck: {fileID: 442984404}
-  _visual: {fileID: 2117696096}
+  _visual: {fileID: 2117696098}
   _standable: {fileID: 2004423994}
+  _speed: 5
+  _acceleration: 20
+  _deceleration: 10
 --- !u!50 &859617594
 Rigidbody2D:
   serializedVersion: 5
@@ -1602,22 +1606,6 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.95, y: 1}
   m_EdgeRadius: 0
---- !u!114 &859617598
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 859617591}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6dcdc1c9395594efc9b0619ecdbe7871, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Abilities.MoveAbility
-  _order: 0
-  _speed: 5
-  _acceleration: 20
-  _deceleration: 10
 --- !u!114 &859617599
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1631,9 +1619,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Abilities.PressAbility
   _order: 0
-  _visual: {fileID: 2117696096}
   _pressSpeed: 20
   _maxShiftDistance: 1
+--- !u!114 &859617600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859617591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19d524223ff1741edbb3d3f9762f82c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Abilities.TackleAbility
+  _order: 0
+  _tackleCheck: {fileID: 1055363777}
+  _tackleCheckSize: {x: 0.8, y: 0.8}
 --- !u!1 &886638877
 GameObject:
   m_ObjectHideFlags: 0
@@ -2005,6 +2007,37 @@ Transform:
   m_Children:
   - {fileID: 519420032}
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1055363776
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1055363777}
+  m_Layer: 9
+  m_Name: Tackle Check
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1055363777
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1055363776}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.5, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 108785642}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1078795433
 GameObject:
@@ -2477,9 +2510,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1434248104}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 24d1906bcb29344cc82311bff3d0795b, type: 3}
+  m_Script: {fileID: 11500000, guid: 61ff081c482244006a98c2deed06aef8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Visuals.MaruVisual
+  m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Visuals.PlayerVisual
   _directionRoot: {fileID: 398073039}
 --- !u!1 &1558527144
 GameObject:
@@ -2761,7 +2794,6 @@ GameObject:
   - component: {fileID: 1736119099}
   - component: {fileID: 1736119096}
   - component: {fileID: 1736119102}
-  - component: {fileID: 1736119101}
   - component: {fileID: 1736119100}
   m_Layer: 9
   m_Name: Maru
@@ -2804,6 +2836,9 @@ MonoBehaviour:
   _grdCheck: {fileID: 648954443}
   _visual: {fileID: 1434248108}
   _standable: {fileID: 1827540577}
+  _speed: 7
+  _acceleration: 20
+  _deceleration: 10
 --- !u!50 &1736119097
 Rigidbody2D:
   serializedVersion: 5
@@ -2880,24 +2915,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Abilities.JumpAbility
   _order: 0
-  _jumpPower: 10
-  _visual: {fileID: 1434248108}
---- !u!114 &1736119101
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1736119094}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6dcdc1c9395594efc9b0619ecdbe7871, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Abilities.MoveAbility
-  _order: 0
-  _speed: 8
-  _acceleration: 20
-  _deceleration: 10
+  _jumpPower: 8
 --- !u!114 &1736119102
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3140,7 +3158,7 @@ GameObject:
   - component: {fileID: 2117696094}
   - component: {fileID: 2117696095}
   - component: {fileID: 2117696097}
-  - component: {fileID: 2117696096}
+  - component: {fileID: 2117696098}
   m_Layer: 9
   m_Name: Body
   m_TagString: Untagged
@@ -3223,19 +3241,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!114 &2117696096
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2117696093}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: de4e0ce54c276429c89a8fe9b1e8f806, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Visuals.Sikaku
-  _directionRoot: {fileID: 108785642}
 --- !u!95 &2117696097
 Animator:
   serializedVersion: 7
@@ -3258,6 +3263,19 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2117696098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2117696093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61ff081c482244006a98c2deed06aef8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Visuals.PlayerVisual
+  _directionRoot: {fileID: 108785642}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

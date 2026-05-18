@@ -275,16 +275,9 @@ AnimationClip:
   m_HasGenericRootTransform: 1
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.46666667
-    functionName: LockMove
-    data: 
-    objectReferenceParameter: {fileID: 0}
-    floatParameter: 0
-    intParameter: 0
-    messageOptions: 0
   - time: 0.55
-    functionName: PressStartAnimEnd
-    data: 
+    functionName: NotifyAnimationEvent
+    data: PressStartEnd
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
