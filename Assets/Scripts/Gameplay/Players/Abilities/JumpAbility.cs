@@ -14,7 +14,7 @@ namespace MaruSikaku.Gameplay.Players.Abilities
         private const string TRIG_JUMP_END = "JumpEnd";
         private const string TRIG_JUMP_END_END = "JumpEndEnd";
 
-        [SerializeField] private float _jumpPower = 8f;
+        [SerializeField] private float _jumpVelocity = 8f;
 
         protected override bool CanStart(PlayerInputData input)
         {
@@ -32,8 +32,7 @@ namespace MaruSikaku.Gameplay.Players.Abilities
         {
             yield return new WaitForFixedUpdate();
 
-            Context.RigidBody.linearVelocityY = 0f;
-            Context.RigidBody.AddForceY(_jumpPower, ForceMode2D.Impulse);
+            Context.RigidBody.linearVelocityY = _jumpVelocity;
 
             // 地面から離れるまで待機
             while (Context.GroundState.IsGrounded)
