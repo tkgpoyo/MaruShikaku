@@ -21,7 +21,7 @@ namespace MaruSikaku.Gameplay.Players.Inputs
             _fixedInput.Jump |= input.Jump;     // 次のFixedUpdateまでに一回でも入力されていればOK
             _fixedInput.Press |= input.Press;   // 次のFixedUpdateまでに一回でも入力されていればOK
 
-            if (input.Switch)
+            if (input.SwitchPlayer)
             {
                 OnSwitch?.Invoke();
 

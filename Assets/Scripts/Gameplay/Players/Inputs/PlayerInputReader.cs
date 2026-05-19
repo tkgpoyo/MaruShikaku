@@ -15,7 +15,7 @@ namespace MaruSikaku.Gameplay.Players.Inputs
         /// <summary>プレス入力</summary>
         public bool Press { get; set; }
         /// <summary>プレイヤーの切り替え入力</summary>
-        public bool Switch { get; set; }
+        public bool SwitchPlayer { get; set; }
         /// <summary>タックル入力</summary>
         public readonly bool Tackle => Jump;
     }
@@ -29,7 +29,7 @@ namespace MaruSikaku.Gameplay.Players.Inputs
         {
             if (!context.performed) { return; }
             var data = _inputData;
-            data.Switch = true;
+            data.SwitchPlayer = true;
             _inputData = data;
         }
 
@@ -70,7 +70,7 @@ namespace MaruSikaku.Gameplay.Players.Inputs
             // ボタン系の入力は読み出しのたびにfalseに戻しておく
             _inputData.Jump = false;
             _inputData.Press = false;
-            _inputData.Switch = false;
+            _inputData.SwitchPlayer = false;
 
             return snapshot;
         }
