@@ -28,7 +28,7 @@ namespace MaruSikaku.Gameplay.Players
 
         public PlayerContext Context => _context;
         public bool CanSwitch => !IsRunning && _context.GroundState.IsGrounded && !_isLandingAnimation;
-        public bool IsRunning => _abilities != null && _abilities.Any(ability => ability.Phase is not EActionPhase.None);
+        public bool IsRunning => _abilities != null && _abilities.Any(ability => ability.Phase is not EAbilityPhase.None);
 
         private PlayerAbility[] _abilities;
         private bool _isFallAnimation;
@@ -107,7 +107,7 @@ namespace MaruSikaku.Gameplay.Players
 
         private void TickAbilities(PlayerInputData input)
         {
-            var runningAbility = _abilities.FirstOrDefault(ability => ability.Phase is not EActionPhase.None);
+            var runningAbility = _abilities.FirstOrDefault(ability => ability.Phase is not EAbilityPhase.None);
 
             if (runningAbility != null)
             {
@@ -119,7 +119,7 @@ namespace MaruSikaku.Gameplay.Players
             {
                 ability.Tick(input);
 
-                if (ability.Phase is not EActionPhase.None)
+                if (ability.Phase is not EAbilityPhase.None)
                 {
                     CancelFall();
                     break;
@@ -128,7 +128,7 @@ namespace MaruSikaku.Gameplay.Players
         }
         private void FixedTickAbilities(PlayerInputData input)
         {
-            var runningAbility = _abilities.FirstOrDefault(ability => ability.Phase is not EActionPhase.None);
+            var runningAbility = _abilities.FirstOrDefault(ability => ability.Phase is not EAbilityPhase.None);
 
             if (runningAbility != null)
             {
@@ -140,7 +140,7 @@ namespace MaruSikaku.Gameplay.Players
             {
                 ability.FixedTick(input);
 
-                if (ability.Phase is not EActionPhase.None)
+                if (ability.Phase is not EAbilityPhase.None)
                 {
                     CancelFall();
                     break;
