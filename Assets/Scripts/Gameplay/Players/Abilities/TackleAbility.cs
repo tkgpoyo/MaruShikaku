@@ -30,7 +30,9 @@ namespace MaruSikaku.Gameplay.Players.Abilities
         [SerializeField] private Vector2 _tackleCheckSize = new (0.4f, 1.0f);
 
         /// <summary>タックル時に接触した、壊れるブロック</summary>
-        private FragileBlock _block;
+        private FragileBlock _fragileBlock;
+        /// <summary>タックル時に接触した，動かせるブロック</summary>
+        private PressableBlock _pressableBlock;
         /// <summary>タックルに成功したかどうか</summary>
         private bool _isSuccess;
 
@@ -49,13 +51,19 @@ namespace MaruSikaku.Gameplay.Players.Abilities
             // 周囲のオブジェクトは動かないと仮定し、能力開始動作時にすでにタックル成功かどうかを判定する
             var blocks = Physics2D.OverlapBoxAll(_tackleCheck.position, _tackleCheckSize, 0f);
 
-            _block = null;                                                  // タックルによって接触した、壊せるブロック
-            foreach (var block in blocks)                                   // 接触したブロックについて
+            _fragileBlock = null;                                                   // タックルによって接触した、壊せるブロック
+            _pressableBlock = null;                                                 // タックルによって接触した、動かせるブロック
+            foreach (var block in blocks)                                           // 接触したブロックについて
             {
-                if (block.TryGetComponent<FragileBlock>(out var b))         // 壊せるブロックの場合
+                if (block.TryGetComponent<FragileBlock>(out var b))                 // 壊せるブロックの場合
                 {
-                    _block = b;                                             // そのブロックを取得
-                    break;                                                  // ループを抜ける
+                    _fragileBlock = b;                                              // そのブロックを取得
+                    break;                                                          // ループを抜ける
+                }
+                if (block.TryGetComponent<PressableBlock>(out var pressableBlock))  // 動かせるブロックの場合
+                {
+                    _pressableBlock = pressableBlock;                               // そのブロックを取得
+                    break;                                                          // ループを抜ける
                 }
             }
         }
@@ -71,10 +79,23 @@ namespace MaruSikaku.Gameplay.Players.Abilities
         /// <inheritdoc/>
         protected override IEnumerator Action(PlayerInputData input)
         {
-            if (_block != null)                                             // 壊せるブロックに接触していた場合
+            if (_fragileBlock != null)                                      // 壊せるブロックに接触していた場合
             {
                 _isSuccess = true;                                          // タックル成功
-                _block.Break();                                             // ブロックを壊す
+                _fragileBlock.Break();                                      // ブロックを壊す
+            }
+            if (_pressableBlock != null)                                    // 動かせるブロックに接触していた場合
+            {
+                _isSuccess = true;                                          // タックル成功
+                switch (Context.FacingDirection)                            // 向いている方向に応じてブロックの動かす向きを変える
+                {
+                case EFaceDirection.Right:
+                    _pressableBlock.Move(EBlockMoveDirection.Right);        // 右に動かす
+                    break;
+                case EFaceDirection.Left:
+                    _pressableBlock.Move(EBlockMoveDirection.Left);         // 左に動かす
+                    break;
+                }
             }
             yield break;
         }

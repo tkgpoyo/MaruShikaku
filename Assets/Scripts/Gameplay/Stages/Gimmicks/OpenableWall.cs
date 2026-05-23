@@ -17,9 +17,6 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         [SerializeField] private float _yLength = 1f;
         /// <summary>下降を防ぐオブジェクトのレイヤー</summary>
         [SerializeField] private LayerMask _blockLayer;
-        /// <summary>下端からどの程度までを下からの接触とみなすか</summary>
-        [SerializeField]
-        private float _bottomContactTolerance = 0.05f;
         /// <summary>壁のSprite Renderer</summary>
         [SerializeField]
         private SpriteRenderer _renderer;
@@ -146,7 +143,7 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
             for (var i = 0; i < contactCount; i++)
             {
                 var contact = collision.GetContact(i);                      // 接触情報を取得
-                if (contact.point.y <= bottomY + _bottomContactTolerance)   // 接触位置が壁の下の場合
+                if (contact.normal.y > 0.5f)                                // 接触位置が壁の下の場合
                 {
                     return true;                                            // 下に接触しているとする
                 }
