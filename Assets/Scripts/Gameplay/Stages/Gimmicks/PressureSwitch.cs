@@ -14,6 +14,9 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         /// <summary>プレスアニメーション時のパラメータ</summary>
         private const string PARAM_PRESS = "Press";
 
+        /// <summary>開閉可能な壁</summary>
+        [SerializeField] private OpenableWall[] _openableWalls;
+
         /// <summary>Animator</summary>
         private Animator _anim;
         /// <summary>乗っているプレイヤー一覧</summary>
@@ -30,6 +33,11 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
             if (!_pressingPlayers.Any())                // 他に誰もスイッチに乗っていない場合
             {
                 _anim.SetBool(PARAM_PRESS, true);       // スイッチを起動
+
+                foreach (var wall in _openableWalls)    // 開閉可能な壁全てに対して
+                {
+                    wall.Open();                        // 壁を開ける
+                }
             }
             _pressingPlayers.Add(player);               // 乗っているプレイヤー一覧に追加
         }
@@ -44,6 +52,11 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
             if (!_pressingPlayers.Any())                // スイッチ上に誰もいなくなった場合
             {
                 _anim.SetBool(PARAM_PRESS, false);      // スイッチをOff
+
+                foreach (var wall in _openableWalls)    // 開閉可能な壁全てに対して
+                {
+                    wall.Close();                       // 壁を閉じる
+                }
             }
         }
     }
