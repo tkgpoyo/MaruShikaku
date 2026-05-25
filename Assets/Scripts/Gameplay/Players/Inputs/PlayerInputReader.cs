@@ -18,6 +18,8 @@ namespace MaruSikaku.Gameplay.Players.Inputs
         public bool SwitchPlayer { get; set; }
         /// <summary>タックル入力</summary>
         public readonly bool Tackle => Jump;
+        /// <summary>ダイブ入力</summary>
+        public readonly bool Dive => Press;
     }
 
     [RequireComponent(typeof(PlayerInput))]

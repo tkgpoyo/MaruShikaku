@@ -2384,7 +2384,7 @@ Transform:
   m_GameObject: {fileID: 1093563161}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -4.5, y: -2.5, z: 0}
+  m_LocalPosition: {x: -4.75, y: -2.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2408,7 +2408,7 @@ MonoBehaviour:
   _yLength: 4
   _blockLayer:
     serializedVersion: 2
-    m_Bits: 512
+    m_Bits: 768
   _renderer: {fileID: 1093563165}
   _collider: {fileID: 1093563164}
 --- !u!61 &1093563164
@@ -3047,7 +3047,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 1
+  m_Mass: 5
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 1
@@ -3540,6 +3540,7 @@ GameObject:
   - component: {fileID: 1736119096}
   - component: {fileID: 1736119102}
   - component: {fileID: 1736119100}
+  - component: {fileID: 1736119103}
   m_Layer: 9
   m_Name: Maru
   m_TagString: Untagged
@@ -3673,6 +3674,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52966e92ff1dc471692fa2290c9250e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.PlayerContext
+--- !u!114 &1736119103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736119094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccdde841a7c07477d8f10f6856dfe29a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Abilities.DiveAbility
+  _order: 0
 --- !u!1 &1827540575
 GameObject:
   m_ObjectHideFlags: 0
