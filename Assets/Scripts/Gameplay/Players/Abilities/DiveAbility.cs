@@ -21,6 +21,11 @@ namespace MaruSikaku.Gameplay.Players.Abilities
             return input.Dive && Context.GroundState.IsGrounded;
         }
         /// <inheritdoc/>
+        protected override void OnActionStart(PlayerInputData input)
+        {
+            Context.LockMove(this);                 // 移動を禁止
+        }
+        /// <inheritdoc/>
         protected override IEnumerator Anticipation(PlayerInputData input)
         {
             Visual.PlayTrigger(TRIG_DIVE_START);    // ダイブ開始アニメーションを開始
@@ -42,6 +47,11 @@ namespace MaruSikaku.Gameplay.Players.Abilities
             {
                 yield return null;                  // 1フレーム待つ
             }
+        }
+        /// <inheritdoc/>
+        protected override void OnFinished()
+        {
+            Context.UnlockMove(this);               // 動きの制限を解除
         }
     }
 }
