@@ -1,0 +1,132 @@
+.stage-editor-root {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.header {
+    flex-direction: column;
+    padding: 6px;
+    border-bottom-width: 1px;
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.file-row {
+    height: 26px;
+}
+
+.command-row {
+    height: 28px;
+}
+
+.content-root {
+    flex-grow: 1;
+    flex-direction: row;
+}
+
+.panel {
+    padding: 8px;
+}
+
+.tool-palette {
+    width: 160px;
+    border-right-width: 1px;
+    flex-shrink: 0;
+}
+
+.grid-area {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.grid-toolbar {
+    height: 28px;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-bottom-width: 1px;
+    flex-shrink: 0;
+}
+
+.grid-container {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.property-panel {
+    width: 260px;
+    border-left-width: 1px;
+    flex-shrink: 0;
+}
+
+.panel-title {
+    font-size: 14px;
+    -unity-font-style: bold;
+    margin-bottom: 8px;
+}
+
+.section-title {
+    font-size: 11px;
+    -unity-font-style: bold;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.tool-button {
+    height: 24px;
+    margin-bottom: 3px;
+}
+
+.small-button {
+    min-width: 64px;
+    height: 22px;
+    margin-right: 4px;
+}
+
+.field-label {
+    min-width: 70px;
+    margin-right: 4px;
+}
+
+.json-path-field {
+    flex-grow: 1;
+    margin-right: 4px;
+}
+
+.small-int-field {
+    width: 48px;
+    margin-right: 4px;
+}
+
+.coordinate-field {
+    width: 48px;
+    margin-left: 4px;
+}
+
+.property-section {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.property-row {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.property-label {
+    width: 60px;
+}
+
+.spacer {
+    flex-grow: 1;
+}
+
+.margin-left {
+    margin-left: 12px;
+}

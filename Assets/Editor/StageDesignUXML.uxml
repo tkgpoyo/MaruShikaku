@@ -1,0 +1,86 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Editor/StageDesignUSS.uss?fileID=7433441132597879392&amp;guid=692c607b34c0b431d99d8eec1044cf0e&amp;type=3#StageDesignUSS"/>
+    <ui:VisualElement name="stageEditorRoot" data-source-type="MaruSikaku.Editor.StageDesignDataSource, Assembly-CSharp-Editor" class="stage-editor-root">
+        <ui:VisualElement name="header" class="header">
+            <ui:VisualElement name="fileRow" class="row file-row">
+                <ui:Label text="JSON File" class="field-label"/>
+                <ui:TextField label="" placeholder-text="" name="jsonPathField" enabled="false" class="json-path-field">
+                    <Bindings>
+                        <ui:DataBinding property="value" data-source-path="JsonPath" binding-mode="TwoWay"/>
+                    </Bindings>
+                </ui:TextField>
+                <ui:Button text="Browse" name="browseButton" class="small-button"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="commandRow" class="row command-row">
+                <ui:Button text="New" name="newButton" class="small-button"/>
+                <ui:Button text="Load" name="loadButton" class="small-button"/>
+                <ui:Button text="Save" name="saveButton" class="small-button"/>
+                <ui:Button text="Save As" name="saveAsButton" class="small-button"/>
+                <ui:VisualElement class="spacer"/>
+                <ui:Label text="Stage Size" class="field-label"/>
+                <ui:IntegerField label="" value="42" name="stageWidthField" class="small-int-field"/>
+                <ui:Label text="x" class="plain-label"/>
+                <ui:IntegerField label="" value="42" name="stageHeightField" class="small-int-field"/>
+                <ui:Label text="Zoom" class="field-label margin-left"/>
+                <ui:Label text="100%" name="zoomLabel" class="zoom-label"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="contentRoot" class="content-root">
+            <ui:VisualElement name="toolPalette" class="tool-palette panel">
+                <ui:Label text="Palette" class="panel-title"/>
+                <ui:Label text="Edit" class="section-title"/>
+                <ui:Button text="Select" name="selectToolButton" class="tool-button"/>
+                <ui:Button text="Erase" name="eraseToolButton" class="tool-button"/>
+                <ui:Label text="Blocks" class="section-title"/>
+                <ui:Button text="Ground" name="groundToolButton" class="tool-button"/>
+                <ui:Button text="Spring" name="springToolButton" class="tool-button"/>
+                <ui:Button text="Fragile" name="fragileToolButton" class="tool-button"/>
+                <ui:Button text="Movable" name="movableToolButton" class="tool-button"/>
+                <ui:Label text="Gimmicks" class="section-title"/>
+                <ui:Button text="Switch" name="switchToolButton" class="tool-button"/>
+                <ui:Button text="Wall" name="wallToolButton" class="tool-button"/>
+                <ui:Label text="Characters" class="section-title"/>
+                <ui:Button text="Sikaku Start" name="sikakuStartToolButton" class="tool-button"/>
+                <ui:Button text="Maru Start" name="maruStartToolButton" class="tool-button"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="gridArea" class="grid-area">
+                <ui:VisualElement name="gridToolbar" class="grid-toolbar">
+                    <ui:Label text="Tool: Select" name="currentToolLabel" class="current-tool-label"/>
+                    <ui:VisualElement class="spacer"/>
+                    <ui:Label text="Cell: -, -" name="mouseCellLabel" class="mouse-cell-label"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="gridContainer" class="grid-container"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="propertyPanel" data-source-path="StageData" class="property-panel panel">
+                <ui:Label text="Player Start" class="section-title"/>
+                <ui:VisualElement data-source-path="" class="property-row">
+                    <ui:Label text="Maru" class="property-label"/>
+                    <ui:IntegerField label="" value="42" name="maruStartXField" class="coordinate-field">
+                        <Bindings>
+                            <ui:DataBinding property="value" data-source-path="MaruStartX" binding-mode="TwoWay"/>
+                        </Bindings>
+                    </ui:IntegerField>
+                    <ui:IntegerField label="" value="42" name="maruStartYField" class="coordinate-field">
+                        <Bindings>
+                            <ui:DataBinding property="value" data-source-path="MaruStartY" binding-mode="TwoWay"/>
+                        </Bindings>
+                    </ui:IntegerField>
+                </ui:VisualElement>
+                <ui:VisualElement class="property-row">
+                    <ui:Label text="Sikaku" class="property-label"/>
+                    <ui:IntegerField label="" value="42" name="sikakuStartXField" class="coordinate-field">
+                        <Bindings>
+                            <ui:DataBinding property="value" data-source-path="SikakuStartX" binding-mode="TwoWay"/>
+                        </Bindings>
+                    </ui:IntegerField>
+                    <ui:IntegerField label="" value="42" name="sikakuStartYField" class="coordinate-field">
+                        <Bindings>
+                            <ui:DataBinding property="value" data-source-path="SikakuStartY" binding-mode="TwoWay"/>
+                        </Bindings>
+                    </ui:IntegerField>
+                </ui:VisualElement>
+                <ui:VisualElement name="objectPropertyContainer" class="property-section"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
