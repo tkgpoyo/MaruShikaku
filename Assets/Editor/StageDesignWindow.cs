@@ -2,6 +2,8 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using MaruSikaku.Editor.Custom;
+using MaruSikaku.Editor.Data;
 
 namespace MaruSikaku.Editor
 {
@@ -33,8 +35,21 @@ namespace MaruSikaku.Editor
 
             // データソースの設定
             rootVisualElement.Q<VisualElement>("stageEditorRoot").dataSource = _dataSource;
+            rootVisualElement.Q<ScrollView>("gridScrollView").Add(new StageGridView(_dataSource.StageData, _dataSource.EditContext));
+
             // header部分のボタン処理イベントの登録
             rootVisualElement.Q<Button>("browseButton").clicked += OnBrowse;
+            // tool部分のボタン処理イベントの登録
+            rootVisualElement.Q<Button>("selectToolButton").clicked += () => { OnChangeTool(EStageEditMode.Select); };
+            rootVisualElement.Q<Button>("eraseToolButton").clicked += () => { OnChangeTool(EStageEditMode.Erase); };
+            rootVisualElement.Q<Button>("groundToolButton").clicked += () => { OnChangeTool(EStageEditMode.Ground); };
+            rootVisualElement.Q<Button>("springToolButton").clicked += () => { OnChangeTool(EStageEditMode.Spring); };
+            rootVisualElement.Q<Button>("fragileToolButton").clicked += () => { OnChangeTool(EStageEditMode.Fragile); };
+            rootVisualElement.Q<Button>("movableToolButton").clicked += () => { OnChangeTool(EStageEditMode.Movable); };
+            rootVisualElement.Q<Button>("switchToolButton").clicked += () => { OnChangeTool(EStageEditMode.Switch); };
+            rootVisualElement.Q<Button>("wallToolButton").clicked += () => { OnChangeTool(EStageEditMode.Wall); };
+            rootVisualElement.Q<Button>("maruStartToolButton").clicked += () => { OnChangeTool(EStageEditMode.MaruStart); };
+            rootVisualElement.Q<Button>("sikakuStartToolButton").clicked += () => { OnChangeTool(EStageEditMode.SikakuStart); };
         }
 
         private void OnBrowse()
@@ -43,6 +58,11 @@ namespace MaruSikaku.Editor
             if (string.IsNullOrWhiteSpace(path)) { return; }
 
             _dataSource.JsonPath = path;                        // ファイルパスを設定
+        }
+
+        private void OnChangeTool(EStageEditMode editMode)
+        {
+            _dataSource.EditContext.EditMode = editMode;
         }
     }
 }

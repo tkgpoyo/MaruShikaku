@@ -56,6 +56,7 @@
 .grid-container {
     flex-grow: 1;
     overflow: hidden;
+    margin-bottom: 20px;
 }
 
 .property-panel {
@@ -129,4 +130,12 @@
 
 .margin-left {
     margin-left: 12px;
+}
+
+.current-tool-label {
+}
+
+.stage-grid-view {
+    height: 200px;
+    width: 200px;
 }

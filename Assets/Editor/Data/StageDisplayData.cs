@@ -5,10 +5,15 @@ using System;
 using Unity.Properties;
 using System.Runtime.CompilerServices;
 
-namespace MaruSikaku.Stage
+namespace MaruSikaku.Editor.Data
 {
-    public class StageDisplayData : INotifyBindablePropertyChanged
+    public partial class StageDisplayData : INotifyBindablePropertyChanged
     {
+        /// <summary>ステージの最小サイズのX</summary>
+        private const int STAGE_MIN_SIZE_X = 10;
+        /// <summary>ステージの最小サイズのY</summary>
+        private const int STAGE_MIN_SIZE_Y = 10;
+
         public event EventHandler<BindablePropertyChangedEventArgs> propertyChanged;
 
         /// <summary>丸キャラクターの初期位置</summary>
@@ -23,7 +28,7 @@ namespace MaruSikaku.Stage
                 Notify(nameof(MaruStartY));
             }
         }
-        private Vector2Int _maruStart;
+        private Vector2Int _maruStart = Vector2Int.zero;
 
         /// <summary>四角キャラクターの初期位置</summary>
         public Vector2Int SikakuStart
@@ -37,7 +42,21 @@ namespace MaruSikaku.Stage
                 Notify(nameof(SikakuStartY));
             }
         }
-        private Vector2Int _sikakuStart;
+        private Vector2Int _sikakuStart = Vector2Int.zero;
+
+        /// <summary>ステージのサイズ</summary>
+        public Vector2Int Size
+        {
+            get => _size;
+            set
+            {
+                if (_size == value) { return; }
+                _size = value;
+                Notify(nameof(SizeX));
+                Notify(nameof(SizeY));
+            }
+        }
+        private Vector2Int _size = new (10, 10);
 
         #region 画面表示用プロパティ
         /// <summary>丸キャラクターの初期位置のX座標</summary>
@@ -86,6 +105,33 @@ namespace MaruSikaku.Stage
             {
                 if (_sikakuStart.y == value) { return; }
                 _sikakuStart.y = value;
+                Notify();
+            }
+        }
+
+        /// <summary>ステージのX方向のサイズ</summary>
+        [CreateProperty]
+        public int SizeX
+        {
+            get => _size.x;
+            set
+            {
+                if (_size.x == value) { return; }
+                if (value < STAGE_MIN_SIZE_X) { value = STAGE_MIN_SIZE_X; }    // 最小サイズ未満の場合，最小サイズに設定
+                _size.x = value;
+                Notify();
+            }
+        }
+        /// <summary>ステージのY方向のサイズ</summary>
+        [CreateProperty]
+        public int SizeY
+        {
+            get => _size.y;
+            set
+            {
+                if (_size.y == value) { return; }
+                if (value < STAGE_MIN_SIZE_Y) { value = STAGE_MIN_SIZE_Y; }    // 最小サイズ未満の場合，最小サイズに設定
+                _size.y = value;
                 Notify();
             }
         }
