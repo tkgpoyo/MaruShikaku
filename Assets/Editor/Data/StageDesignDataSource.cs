@@ -72,7 +72,6 @@ namespace MaruSikaku.Editor.Data
         }
         private StageEditContext _editContext;
 
-
         /// <summary>
         /// 子要素の変更通知を行います． 
         /// </summary>

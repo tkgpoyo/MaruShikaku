@@ -4,6 +4,7 @@ using UnityEngine.UIElements;
 using System;
 using Unity.Properties;
 using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 
 namespace MaruSikaku.Editor.Data
 {
@@ -58,6 +59,11 @@ namespace MaruSikaku.Editor.Data
         }
         private Vector2Int _size = new (10, 10);
 
+        /// <summary>セル座標と地形タイルの対応</summary>
+        public Dictionary<Vector2Int, StageTerrainCell> TerrainDic { get; private set; } = new();
+        /// <summary>セル座標とステージオブジェクトの対応</summary>
+        public Dictionary<Vector2Int, StageObject> StageObjectDic { get; private set; } = new();
+
         #region 画面表示用プロパティ
         /// <summary>丸キャラクターの初期位置のX座標</summary>
         [CreateProperty]
@@ -66,6 +72,7 @@ namespace MaruSikaku.Editor.Data
             get => _maruStart.x;
             set
             {
+                value = Mathf.Clamp(value, 0, SizeX);
                 if (_maruStart.x == value) { return; }
                 _maruStart.x = value;
                 Notify();
@@ -78,6 +85,7 @@ namespace MaruSikaku.Editor.Data
             get => _maruStart.y;
             set
             {
+                value = Mathf.Clamp(value, 0, SizeY);
                 if (_maruStart.y == value) { return; }
                 _maruStart.y = value;
                 Notify();
@@ -91,6 +99,7 @@ namespace MaruSikaku.Editor.Data
             get => _sikakuStart.x;
             set
             {
+                value = Mathf.Clamp(value, 0, SizeX);
                 if (_sikakuStart.x == value) { return; }
                 _sikakuStart.x = value;
                 Notify();
@@ -103,6 +112,7 @@ namespace MaruSikaku.Editor.Data
             get => _sikakuStart.y;
             set
             {
+                value = Mathf.Clamp(value, 0, SizeY);
                 if (_sikakuStart.y == value) { return; }
                 _sikakuStart.y = value;
                 Notify();
@@ -116,8 +126,8 @@ namespace MaruSikaku.Editor.Data
             get => _size.x;
             set
             {
+                value = Mathf.Max(value, STAGE_MIN_SIZE_X);
                 if (_size.x == value) { return; }
-                if (value < STAGE_MIN_SIZE_X) { value = STAGE_MIN_SIZE_X; }    // 最小サイズ未満の場合，最小サイズに設定
                 _size.x = value;
                 Notify();
             }
@@ -129,14 +139,70 @@ namespace MaruSikaku.Editor.Data
             get => _size.y;
             set
             {
+                value = Mathf.Max(value, STAGE_MIN_SIZE_Y);
                 if (_size.y == value) { return; }
-                if (value < STAGE_MIN_SIZE_Y) { value = STAGE_MIN_SIZE_Y; }    // 最小サイズ未満の場合，最小サイズに設定
                 _size.y = value;
                 Notify();
             }
         }
 
+        /// <summary>地形タイルのリスト</summary>
+        /// <remarks><see cref="StageTerrainCell"/>を追加する際は，<see cref="AddTerrainCell"/>メソッドを，削除する際は<see cref="RemoveTerrainCell"/>を使用してください．</remarks>
+        public NotifyList<StageTerrainCell> TerrainCells
+        {
+            get => _terrainCells;
+            set
+            {
+                if (_terrainCells == value) { return; }
+                _terrainCells = value;
+                Notify();
+            }
+        }
+        private NotifyList<StageTerrainCell> _terrainCells = new();
+
+        /// <summary>ステージ上のオブジェクトのリスト</summary>
+        /// <remarks><see cref="StageObject"/>を追加する際は，<see cref="AddStageObject"/>メソッドを，削除する際は<see cref="RemoveStageObject"/>を使用してください．</remarks>
+        public NotifyList<StageObject> StageObjects
+        {
+            get => _stageObjects;
+            set
+            {
+                if (_stageObjects == value) { return; }
+                _stageObjects = value;
+                Notify();
+            }
+        }
+        private NotifyList<StageObject> _stageObjects = new();
+
         #endregion 画面表示用プロパティ
+
+        public void AddTerrainCell(StageTerrainCell terrainCell)
+        {
+            if (TerrainDic.ContainsKey(terrainCell.Pos)) { return; }
+            TerrainDic.Add(terrainCell.Pos, terrainCell);
+            TerrainCells.Add(terrainCell);
+        }
+
+        public void RemoveTerrainCell(StageTerrainCell terrainCell)
+        {
+            if (!TerrainDic.ContainsKey(terrainCell.Pos)) { return; }
+            TerrainDic.Remove(terrainCell.Pos);
+            TerrainCells.Remove(terrainCell);
+        }
+
+        public void AddStageObject(StageObject stageObject)
+        {
+            if (StageObjectDic.ContainsKey(stageObject.Pos)) { return; }
+            StageObjectDic.Add(stageObject.Pos, stageObject);
+            StageObjects.Add(stageObject);
+        }
+
+        public void RemoveStageObject(StageObject stageObject)
+        {
+            if (!StageObjectDic.ContainsKey(stageObject.Pos)) { return; }
+            StageObjectDic.Remove(stageObject.Pos);
+            StageObjects.Remove(stageObject);
+        }
 
         /// <summary>
         /// 変更通知を行います．
