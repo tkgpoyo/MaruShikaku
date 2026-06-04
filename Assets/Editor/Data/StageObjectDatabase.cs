@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using MaruSikaku.Stage;
 
 namespace MaruSikaku.Editor.Data
 {
-    [CreateAssetMenu(menuName = "Marushikaku/Stage Object Database")]
+    [CreateAssetMenu(menuName = "MaruSikaku/Stage Object Database")]
     public class StageObjectDatabase : ScriptableObject
     {        
         [SerializeField]

@@ -7,6 +7,7 @@ using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
+using MaruSikaku.Stage;
 
 namespace MaruSikaku.Editor.Custom
 {
@@ -20,6 +21,7 @@ namespace MaruSikaku.Editor.Custom
         private StageDisplayData _data;
         private StageEditContext _editContext;
         private float _cellPixel => CELL_DEFAULT_PIXEL * _editContext?.ZoomRate ?? 1f;
+        private int _nextId = 0;
 
         public StageGridView(StageDisplayData stageData, StageEditContext editContext)
         {
@@ -94,11 +96,11 @@ namespace MaruSikaku.Editor.Custom
             {
                 return mode switch
                 {
-                    EStageEditMode.Spring => new SpringObject(pos),
-                    EStageEditMode.Fragile => new FragileObject(pos),
-                    EStageEditMode.Movable => new MovableObject(pos),
-                    EStageEditMode.Switch => new SwitchObject(pos),
-                    EStageEditMode.Wall => new WallObject(pos),
+                    EStageEditMode.Spring => new SpringObject(GetNextId(), pos),
+                    EStageEditMode.Fragile => new FragileObject(GetNextId(), pos),
+                    EStageEditMode.Movable => new MovableObject(GetNextId(), pos),
+                    EStageEditMode.Switch => new SwitchObject(GetNextId(), pos),
+                    EStageEditMode.Wall => new WallObject(GetNextId(), pos),
                     _ => throw new NotImplementedException($"{mode}は未対応です．")
                 };
             }
@@ -404,6 +406,15 @@ namespace MaruSikaku.Editor.Custom
             y = Mathf.Clamp(y, 0, 1);
 
             return new ((cell.x + x) * _cellPixel, (cell.y + y) * _cellPixel);
+        }
+
+        /// <summary>
+        /// 次のステージオブジェクトIDを取得します．
+        /// </summary>
+        /// <returns>ステージオブジェクトID</returns>
+        private int GetNextId()
+        {
+            return _nextId++;
         }
     }
 

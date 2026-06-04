@@ -5,10 +5,12 @@ using System;
 using Unity.Properties;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
+using System.Linq;
+using MaruSikaku.Stage;
 
 namespace MaruSikaku.Editor.Data
 {
-    public partial class StageDisplayData : INotifyBindablePropertyChanged
+    public class StageDisplayData : INotifyBindablePropertyChanged
     {
         /// <summary>ステージの最小サイズのX</summary>
         private const int STAGE_MIN_SIZE_X = 10;
@@ -34,16 +36,16 @@ namespace MaruSikaku.Editor.Data
         /// <summary>四角キャラクターの初期位置</summary>
         public Vector2Int SikakuStart
         {
-            get => _sikakuStart;
+            get => _SikakuStart;
             set
             {
-                if (_sikakuStart == value) { return; }
-                _sikakuStart = value;
+                if (_SikakuStart == value) { return; }
+                _SikakuStart = value;
                 Notify(nameof(SikakuStartX));
                 Notify(nameof(SikakuStartY));
             }
         }
-        private Vector2Int _sikakuStart = Vector2Int.zero;
+        private Vector2Int _SikakuStart = Vector2Int.zero;
 
         /// <summary>ステージのサイズ</summary>
         public Vector2Int Size
@@ -96,12 +98,12 @@ namespace MaruSikaku.Editor.Data
         [CreateProperty]
         public int SikakuStartX
         {
-            get => _sikakuStart.x;
+            get => _SikakuStart.x;
             set
             {
                 value = Mathf.Clamp(value, 0, SizeX);
-                if (_sikakuStart.x == value) { return; }
-                _sikakuStart.x = value;
+                if (_SikakuStart.x == value) { return; }
+                _SikakuStart.x = value;
                 Notify();
             }
         }
@@ -109,12 +111,12 @@ namespace MaruSikaku.Editor.Data
         [CreateProperty]
         public int SikakuStartY
         {
-            get => _sikakuStart.y;
+            get => _SikakuStart.y;
             set
             {
                 value = Mathf.Clamp(value, 0, SizeY);
-                if (_sikakuStart.y == value) { return; }
-                _sikakuStart.y = value;
+                if (_SikakuStart.y == value) { return; }
+                _SikakuStart.y = value;
                 Notify();
             }
         }
@@ -155,6 +157,7 @@ namespace MaruSikaku.Editor.Data
             {
                 if (_terrainCells == value) { return; }
                 _terrainCells = value;
+                TerrainDic = _terrainCells.ToDictionary(terrainCell => terrainCell.Pos);
                 Notify();
             }
         }
@@ -169,6 +172,7 @@ namespace MaruSikaku.Editor.Data
             {
                 if (_stageObjects == value) { return; }
                 _stageObjects = value;
+                StageObjectDic = _stageObjects.ToDictionary(stageObject => stageObject.Pos);
                 Notify();
             }
         }

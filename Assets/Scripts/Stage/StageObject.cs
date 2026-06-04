@@ -1,10 +1,11 @@
 using System;
 using System.Runtime.CompilerServices;
+using TMPro;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace MaruSikaku.Editor.Data
+namespace MaruSikaku.Stage
 {    
     public enum EStageObjectType
     {
@@ -17,9 +18,6 @@ namespace MaruSikaku.Editor.Data
 
     public abstract class StageObject : INotifyBindablePropertyChanged
     {
-        private static int _nextId = 0;
-        private static object _lockId = new();
-
         public event EventHandler<BindablePropertyChangedEventArgs> propertyChanged;
 
         [CreateProperty]
@@ -63,22 +61,11 @@ namespace MaruSikaku.Editor.Data
 
         public abstract EStageObjectType Type { get; }
 
-        public StageObject(Vector2Int pos, bool isDeleted = false)
+        public StageObject(int id, Vector2Int pos, bool isDeleted = false)
         {
-            Id = GetNextId();
-
+            Id = id;
             Pos = pos;
             IsDeleted = isDeleted;
-        }
-
-        private static int GetNextId()
-        {
-            int id;
-            lock(_lockId)
-            {
-                id = _nextId++;
-            }
-            return id;
         }
 
         /// <summary>
@@ -91,10 +78,38 @@ namespace MaruSikaku.Editor.Data
         }
     }
 
+    [Serializable]
+    public class StageObjectSaveData
+    {
+        [SerializeField]
+        private int _id;
+        public int Id => _id;
+
+        [SerializeField]
+        private Vector2Int _pos;
+        public Vector2Int Pos => _pos;
+
+        [SerializeField]
+        private EStageObjectType _type;
+        public EStageObjectType Type => _type;
+
+        [SerializeField]
+        private int _switchId = -1;
+        public int SwitchId => _switchId;
+
+        public StageObjectSaveData(int id, Vector2Int pos, EStageObjectType type, int switchId)
+        {
+            _id = id;
+            _pos = pos;
+            _type = type;
+            _switchId = switchId;
+        }
+    }
+
     public class SpringObject : StageObject
     {
         public override EStageObjectType Type => EStageObjectType.Spring;
-        public SpringObject(Vector2Int pos, bool isDeleted = false) : base(pos, isDeleted)
+        public SpringObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
     }
@@ -102,7 +117,7 @@ namespace MaruSikaku.Editor.Data
     public class FragileObject : StageObject
     {
         public override EStageObjectType Type => EStageObjectType.Fragile;
-        public FragileObject(Vector2Int pos, bool isDeleted = false) : base(pos, isDeleted)
+        public FragileObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
     }
@@ -110,7 +125,7 @@ namespace MaruSikaku.Editor.Data
     public class MovableObject : StageObject
     {
         public override EStageObjectType Type => EStageObjectType.Movable;
-        public MovableObject(Vector2Int pos, bool isDeleted = false) : base(pos, isDeleted)
+        public MovableObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
     }
@@ -118,7 +133,7 @@ namespace MaruSikaku.Editor.Data
     public class SwitchObject : StageObject
     {
         public override EStageObjectType Type => EStageObjectType.Switch;
-        public SwitchObject(Vector2Int pos, bool isDeleted = false) : base(pos, isDeleted)
+        public SwitchObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
     }
@@ -140,7 +155,7 @@ namespace MaruSikaku.Editor.Data
 
         public override EStageObjectType Type => EStageObjectType.Wall;
 
-        public WallObject(Vector2Int pos, int switchId = -1, bool isDeleted = false) : base(pos, isDeleted)
+        public WallObject(int id, Vector2Int pos, int switchId = -1, bool isDeleted = false) : base(id, pos, isDeleted)
         {
             SwitchId = switchId;
         }

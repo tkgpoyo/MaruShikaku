@@ -22,6 +22,15 @@ namespace MaruSikaku.Editor.Data
 
         public bool IsReadOnly => false;
 
+        public NotifyList()
+        {
+            _items = new();
+        }
+        public NotifyList(IEnumerable<T> items)
+        {
+            _items = items != null ? new List<T>(items) : new List<T>();
+        }
+
 
         public void Add(T item)
         {

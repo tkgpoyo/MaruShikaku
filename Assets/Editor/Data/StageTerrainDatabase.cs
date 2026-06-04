@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using MaruSikaku.Stage;
 
 namespace MaruSikaku.Editor.Data
 {
-    [CreateAssetMenu(menuName = "Marushikaku/Stage Terrain Database")]
+    [CreateAssetMenu(menuName = "MaruSikaku/Stage Terrain Database")]
     public class StageTerrainDatabase : ScriptableObject
     {
         [SerializeField]

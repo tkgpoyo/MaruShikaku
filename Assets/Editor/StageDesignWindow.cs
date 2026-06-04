@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using MaruSikaku.Editor.Custom;
 using MaruSikaku.Editor.Data;
+using MaruSikaku.Stage;
 
 namespace MaruSikaku.Editor
 {
@@ -39,6 +40,7 @@ namespace MaruSikaku.Editor
 
             // header部分のボタン処理イベントの登録
             rootVisualElement.Q<Button>("browseButton").clicked += OnBrowse;
+            rootVisualElement.Q<Button>("saveButton").clicked += OnSave;
             // tool部分のボタン処理イベントの登録
             rootVisualElement.Q<Button>("selectToolButton").clicked += () => { OnChangeTool(EStageEditMode.Select); };
             rootVisualElement.Q<Button>("eraseToolButton").clicked += () => { OnChangeTool(EStageEditMode.Erase); };
@@ -58,6 +60,25 @@ namespace MaruSikaku.Editor
             if (string.IsNullOrWhiteSpace(path)) { return; }
 
             _dataSource.JsonPath = path;                        // ファイルパスを設定
+
+            // StageDataのロード
+            var json = File.ReadAllText(path);
+            var stageSaveData = JsonUtility.FromJson<StageSaveData>(json);
+            var stageDisplayData = StageDataConverter.FromStageSaveData(stageSaveData);
+            _dataSource.StageData.MaruStart = stageDisplayData.MaruStart;
+            _dataSource.StageData.SikakuStart = stageDisplayData.SikakuStart;
+            _dataSource.StageData.Size = stageDisplayData.Size;
+            _dataSource.StageData.TerrainCells = stageDisplayData.TerrainCells;
+            _dataSource.StageData.StageObjects = stageDisplayData.StageObjects;
+        }
+
+        private void OnSave()
+        {
+            var json = EditorJsonUtility.ToJson(StageDataConverter.ToStageSaveData(_dataSource.StageData), true);
+            var path = EditorUtility.SaveFilePanel("JSONファイル保存先を選択", Application.dataPath, "stage", "json");   // JSONファイル保存先を選択
+            if (string.IsNullOrWhiteSpace(path)) { return; }
+
+            File.WriteAllText(path, json);
         }
 
         private void OnChangeTool(EStageEditMode editMode)
