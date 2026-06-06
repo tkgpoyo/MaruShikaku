@@ -16,20 +16,14 @@ namespace MaruSikaku.Editor.Custom
         private const float CELL_DEFAULT_PIXEL = 20f;
         private static readonly Color BACKGROUND_COLOR = Color.softBlue;
         private static readonly Color GRID_COLOR = Color.black;
-        private static readonly Color HOVER_COLOR = new(1, 1, 1, 0.4f);
+        private static readonly Color HOVER_COLOR = new(1, 1, 1, 0.35f);
 
-        private StageDisplayData _data;
-        private StageEditContext _editContext;
-        private float _cellPixel => CELL_DEFAULT_PIXEL * _editContext?.ZoomRate ?? 1f;
+        private float _cellPixel => CELL_DEFAULT_PIXEL * EditContext?.ZoomRate ?? 1f;
         private int _nextId = 0;
 
-        public StageGridView(StageDisplayData stageData, StageEditContext editContext)
+        public StageGridView()
         {
-            _data = stageData ?? throw new ArgumentNullException(nameof(stageData));
-            _editContext = editContext ?? throw new ArgumentNullException(nameof(editContext));
             AddToClassList("stage-grid-view");
-
-            _data.propertyChanged += OnStageDataChanged;
 
             UpdateView();
 
@@ -39,6 +33,27 @@ namespace MaruSikaku.Editor.Custom
 
             generateVisualContent += OnGenerateVisualContent;
         }
+
+        public StageDisplayData Data
+        {
+            get => _data;
+            set
+            {
+                if (_data == value) { return; }
+                if (_data != null)
+                {
+                    _data.propertyChanged -= OnStageDataChanged;
+                }
+                _data = value;
+                if (_data != null)
+                {
+                    _data.propertyChanged += OnStageDataChanged;
+                }
+            }
+        }
+        private StageDisplayData _data = new();
+        
+        public StageEditContext EditContext { get; set; } = new();
 
         private void OnStageDataChanged(object sender, BindablePropertyChangedEventArgs e)
         {
@@ -56,36 +71,36 @@ namespace MaruSikaku.Editor.Custom
 
         private void OnMouseClick(ClickEvent e)
         {
-            if (_editContext.HoverCell == null) { return; }
-            var hoverCell = (Vector2Int)_editContext.HoverCell;
+            if (EditContext.HoverCell == null) { return; }
+            var hoverCell = (Vector2Int)EditContext.HoverCell;
 
-            switch (_editContext.EditMode)
+            switch (EditContext.EditMode)
             {
                 case EStageEditMode.Select:
                     break;
                 case EStageEditMode.Erase:
-                    if (_data.TerrainDic.ContainsKey(hoverCell))
+                    if (Data.TerrainDic.ContainsKey(hoverCell))
                     {
-                        _data.RemoveTerrainCell(_data.TerrainDic[hoverCell]);
+                        Data.RemoveTerrainCell(Data.TerrainDic[hoverCell]);
                     }
-                    if (_data.StageObjectDic.ContainsKey(hoverCell))
+                    if (Data.StageObjectDic.ContainsKey(hoverCell))
                     {
-                        _data.RemoveStageObject(_data.StageObjectDic[hoverCell]);
+                        Data.RemoveStageObject(Data.StageObjectDic[hoverCell]);
                     }
                     break;
                 case EStageEditMode.Ground:
-                    if (_data.TerrainDic.ContainsKey(hoverCell) || _data.StageObjectDic.ContainsKey(hoverCell)) { return; }
+                    if (Data.TerrainDic.ContainsKey(hoverCell) || Data.StageObjectDic.ContainsKey(hoverCell)) { return; }
                     var ground = new StageTerrainCell(hoverCell, ETerrainType.Ground);
-                    _data.AddTerrainCell(ground);
+                    Data.AddTerrainCell(ground);
                     break;
                 case EStageEditMode.Spring:
                 case EStageEditMode.Fragile:
                 case EStageEditMode.Movable:
                 case EStageEditMode.Switch:
                 case EStageEditMode.Wall:
-                    if (_data.TerrainDic.ContainsKey(hoverCell) || _data.StageObjectDic.ContainsKey(hoverCell)) { return; }
-                    var stageObject = InstantiateStageObject(hoverCell, _editContext.EditMode);
-                    _data.AddStageObject(stageObject);
+                    if (Data.TerrainDic.ContainsKey(hoverCell) || Data.StageObjectDic.ContainsKey(hoverCell)) { return; }
+                    var stageObject = InstantiateStageObject(hoverCell, EditContext.EditMode);
+                    Data.AddStageObject(stageObject);
                     break;
                 case EStageEditMode.MaruStart:
                 case EStageEditMode.SikakuStart:
@@ -110,18 +125,18 @@ namespace MaruSikaku.Editor.Custom
         {
             var cell = PointerToCell(e.localPosition);
             if (!IsInsideStage(cell)) {                         // ステージ外にマウスがある場合
-                _editContext.HoverCell = null;
+                EditContext.HoverCell = null;
                 return;
             }
-            if (_editContext.HoverCell == cell) { return; }     // 以前のhover中のセルと現在のhover中のセルが同じ場合，変更がないためhover中のセルを更新せず抜ける
+            if (EditContext.HoverCell == cell) { return; }     // 以前のhover中のセルと現在のhover中のセルが同じ場合，変更がないためhover中のセルを更新せず抜ける
 
-            _editContext.HoverCell = cell;                      // hover中のセルに設定
+            EditContext.HoverCell = cell;                      // hover中のセルに設定
             MarkDirtyRepaint();                                 // 再描画
         }
 
         private void OnPointerLeave(PointerLeaveEvent e)
         {
-            _editContext.HoverCell = null;
+            EditContext.HoverCell = null;
             MarkDirtyRepaint();
         }
 
@@ -138,8 +153,8 @@ namespace MaruSikaku.Editor.Custom
 
         private void UpdateView()
         {
-            style.width = _data.SizeX * _cellPixel;
-            style.height = _data.SizeY * _cellPixel;
+            style.width = Data.SizeX * _cellPixel;
+            style.height = Data.SizeY * _cellPixel;
 
             MarkDirtyRepaint();
         }
@@ -164,12 +179,12 @@ namespace MaruSikaku.Editor.Custom
             painter.Rect(contentRect);              // Gridの外枠をなぞる
 
             // Gridを描画
-            for (int x = 1; x < _data.SizeX; x++) {
+            for (int x = 1; x < Data.SizeX; x++) {
                 var px = x * _cellPixel;
                 painter.MoveTo(new(px, contentRect.yMin));
                 painter.LineTo(new(px, contentRect.yMax));
             }
-            for (int y = 1; y < _data.SizeY; y++) {
+            for (int y = 1; y < Data.SizeY; y++) {
                 var py = y * _cellPixel;
                 painter.MoveTo(new(contentRect.xMin, py));
                 painter.LineTo(new(contentRect.xMax, py));
@@ -180,12 +195,12 @@ namespace MaruSikaku.Editor.Custom
 
         private void DrawHoverCell(Painter2D painter)
         {
-            if (_editContext.HoverCell == null) { return; }
+            if (EditContext.HoverCell == null) { return; }
 
             painter.fillColor = HOVER_COLOR;
             painter.BeginPath();
 
-            var hoverCell = (Vector2Int)_editContext.HoverCell;     // マウス移動イベントで上書きされる恐れがあるため，マウスが乗っているセルの場所を保存
+            var hoverCell = (Vector2Int)EditContext.HoverCell;     // マウス移動イベントで上書きされる恐れがあるため，マウスが乗っているセルの場所を保存
             var hoverRect = new Rect() { 
                 xMin = hoverCell.x * _cellPixel, xMax = (hoverCell.x + 1) * _cellPixel,
                 yMin = hoverCell.y * _cellPixel, yMax = (hoverCell.y + 1) * _cellPixel
@@ -197,7 +212,7 @@ namespace MaruSikaku.Editor.Custom
 
         private void DrawTerrainCells(Painter2D painter)
         {
-            foreach (var terrainCell in _data.TerrainCells)
+            foreach (var terrainCell in Data.TerrainCells)
             {
                 if (!IsInsideStage(terrainCell.Pos)) { continue; }
                 DrawTerrainCell(painter, terrainCell);
@@ -219,7 +234,7 @@ namespace MaruSikaku.Editor.Custom
 
         private void DrawStageObjects(Painter2D painter)
         {
-            foreach (var stageObject in _data.StageObjects)
+            foreach (var stageObject in Data.StageObjects)
             {
                 if (!IsInsideStage(stageObject.Pos)) { continue; }
                 DrawStageObject(painter, stageObject);
@@ -373,9 +388,9 @@ namespace MaruSikaku.Editor.Custom
         /// <param name="cell">セル</param>
         private bool IsInsideStage(Vector2Int cell)
         {
-            return _data != null &&
-                0 <= cell.x && cell.x < _data.SizeX && 
-                0 <= cell.y && cell.y < _data.SizeY;
+            return Data != null &&
+                0 <= cell.x && cell.x < Data.SizeX && 
+                0 <= cell.y && cell.y < Data.SizeY;
         }
         /// <summary>
         /// セルから長方形へと変換します．
