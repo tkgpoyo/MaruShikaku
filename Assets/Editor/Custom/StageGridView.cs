@@ -16,6 +16,7 @@ namespace MaruSikaku.Editor.Custom
         private const float CELL_DEFAULT_PIXEL = 20f;
         private static readonly Color BACKGROUND_COLOR = Color.softBlue;
         private static readonly Color GRID_COLOR = Color.black;
+        private static readonly Color GRID_SELECTED_COLOR = Color.red;
         private static readonly Color HOVER_COLOR = new(1, 1, 1, 0.35f);
 
         private float _cellPixel => CELL_DEFAULT_PIXEL * EditContext?.ZoomRate ?? 1f;
@@ -49,11 +50,32 @@ namespace MaruSikaku.Editor.Custom
                 {
                     _data.propertyChanged += OnStageDataChanged;
                 }
+
+                MarkDirtyRepaint();
             }
         }
         private StageDisplayData _data = new();
         
-        public StageEditContext EditContext { get; set; } = new();
+        public StageEditContext EditContext
+        {
+            get => _editContext;
+            set
+            {
+                if (_editContext == value) { return; }
+                if (_editContext != null)
+                {
+                    _editContext.propertyChanged -= OnEditContextChanged;
+                }
+                _editContext = value;
+                if (_editContext != null)
+                {
+                    _editContext.propertyChanged += OnEditContextChanged;
+                }
+
+                MarkDirtyRepaint();
+            }
+        }
+        private StageEditContext _editContext = new();
 
         private void OnStageDataChanged(object sender, BindablePropertyChangedEventArgs e)
         {
@@ -61,9 +83,21 @@ namespace MaruSikaku.Editor.Custom
                 case nameof(StageDisplayData.SizeX):
                 case nameof(StageDisplayData.SizeY):
                     UpdateView();
+                    MarkDirtyRepaint();
                     break;
                 case nameof(StageDisplayData.TerrainCells):
                 case nameof(StageDisplayData.StageObjects):
+                    MarkDirtyRepaint();
+                    break;
+            }
+        }
+
+        private void OnEditContextChanged(object sender, BindablePropertyChangedEventArgs e)
+        {
+            switch (e.propertyName)
+            {
+                case nameof(StageEditContext.HoverCell):
+                case nameof(StageEditContext.SelectedCell):
                     MarkDirtyRepaint();
                     break;
             }
@@ -77,6 +111,7 @@ namespace MaruSikaku.Editor.Custom
             switch (EditContext.EditMode)
             {
                 case EStageEditMode.Select:
+                    EditContext.SelectedCell = hoverCell;
                     break;
                 case EStageEditMode.Erase:
                     if (Data.TerrainDic.ContainsKey(hoverCell))
@@ -131,13 +166,11 @@ namespace MaruSikaku.Editor.Custom
             if (EditContext.HoverCell == cell) { return; }     // 以前のhover中のセルと現在のhover中のセルが同じ場合，変更がないためhover中のセルを更新せず抜ける
 
             EditContext.HoverCell = cell;                      // hover中のセルに設定
-            MarkDirtyRepaint();                                 // 再描画
         }
 
         private void OnPointerLeave(PointerLeaveEvent e)
         {
             EditContext.HoverCell = null;
-            MarkDirtyRepaint();
         }
 
         private void OnGenerateVisualContent(MeshGenerationContext context)
@@ -149,14 +182,13 @@ namespace MaruSikaku.Editor.Custom
             DrawHoverCell(painter);
             DrawTerrainCells(painter);
             DrawStageObjects(painter);
+            DrawSelectedCell(painter);
         }
 
         private void UpdateView()
         {
             style.width = Data.SizeX * _cellPixel;
             style.height = Data.SizeY * _cellPixel;
-
-            MarkDirtyRepaint();
         }
 
         private void DrawBackground(Painter2D painter) 
@@ -373,6 +405,21 @@ namespace MaruSikaku.Editor.Custom
                         break;
                 }
             }
+        }
+
+        private void DrawSelectedCell(Painter2D painter)
+        {
+            // 選択されているセルを赤い枠で描画
+            if (EditContext.SelectedCell != null)
+            {
+                painter.BeginPath();
+                painter.strokeColor = GRID_SELECTED_COLOR;
+                painter.lineWidth = 2;
+                painter.Rect(CellToRect((Vector2Int)EditContext.SelectedCell));
+
+                painter.Stroke();
+            }
+            
         }
 
         private Vector2Int PointerToCell(Vector2 position)

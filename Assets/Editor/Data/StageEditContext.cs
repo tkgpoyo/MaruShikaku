@@ -5,6 +5,7 @@ using System;
 using Unity.Properties;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Security.Policy;
 
 namespace MaruSikaku.Editor.Data
 {
@@ -67,9 +68,22 @@ namespace MaruSikaku.Editor.Data
                 }
 
                 HoverCellText = sb.ToString();
+                Notify();
             }
         }
         private Vector2Int? _hoverCell;
+
+        public Vector2Int? SelectedCell
+        {
+            get => _selectedCell;
+            set
+            {
+                if (_selectedCell == value) { return; }
+                _selectedCell = value;
+                Notify();
+            }
+        }
+        private Vector2Int? _selectedCell = null;
 
         [CreateProperty]
         public EStageEditMode EditMode
