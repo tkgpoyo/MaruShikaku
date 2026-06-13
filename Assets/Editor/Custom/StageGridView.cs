@@ -79,7 +79,6 @@ namespace MaruSikaku.Editor.Custom
 
         private void OnStageDataChanged(object sender, BindablePropertyChangedEventArgs e)
         {
-            Debug.Log(e.propertyName);
             switch (e.propertyName) {
                 case nameof(StageDisplayData.SizeX):
                 case nameof(StageDisplayData.SizeY):

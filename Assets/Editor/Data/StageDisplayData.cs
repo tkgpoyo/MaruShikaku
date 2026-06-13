@@ -156,8 +156,16 @@ namespace MaruSikaku.Editor.Data
             set
             {
                 if (_terrainCells == value) { return; }
+                if (_terrainCells != null)
+                {
+                    _terrainCells.propertyChanged -= OnTerrainCellsChanged;
+                }
                 _terrainCells = value;
                 TerrainDic = _terrainCells.ToDictionary(terrainCell => terrainCell.Pos);
+                if (_terrainCells != null)
+                {
+                    _terrainCells.propertyChanged += OnTerrainCellsChanged;
+                }
                 Notify();
             }
         }
@@ -171,8 +179,16 @@ namespace MaruSikaku.Editor.Data
             set
             {
                 if (_stageObjects == value) { return; }
+                if (_stageObjects != null)
+                {
+                    _stageObjects.propertyChanged -= OnStageObjectsChanged;
+                }
                 _stageObjects = value;
                 StageObjectDic = _stageObjects.ToDictionary(stageObject => stageObject.Pos);
+                if (_stageObjects != null)
+                {
+                    _stageObjects.propertyChanged += OnStageObjectsChanged;
+                }
                 Notify();
             }
         }
@@ -206,6 +222,16 @@ namespace MaruSikaku.Editor.Data
             if (!StageObjectDic.ContainsKey(stageObject.Pos)) { return; }
             StageObjectDic.Remove(stageObject.Pos);
             StageObjects.Remove(stageObject);
+        }
+
+        private void OnTerrainCellsChanged(object sender, BindablePropertyChangedEventArgs e)
+        {
+            Notify(nameof(TerrainCells));
+        }
+
+        private void OnStageObjectsChanged(object sender, BindablePropertyChangedEventArgs e)
+        {
+            Notify(nameof(StageObjects));
         }
 
         /// <summary>
