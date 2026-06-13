@@ -79,6 +79,7 @@ namespace MaruSikaku.Editor.Custom
 
         private void OnStageDataChanged(object sender, BindablePropertyChangedEventArgs e)
         {
+            Debug.Log(e.propertyName);
             switch (e.propertyName) {
                 case nameof(StageDisplayData.SizeX):
                 case nameof(StageDisplayData.SizeY):
@@ -410,7 +411,7 @@ namespace MaruSikaku.Editor.Custom
         private void DrawSelectedCell(Painter2D painter)
         {
             // 選択されているセルを赤い枠で描画
-            if (EditContext.SelectedCell != null)
+            if ( EditContext.SelectedCell != null)
             {
                 painter.BeginPath();
                 painter.strokeColor = GRID_SELECTED_COLOR;

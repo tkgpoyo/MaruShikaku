@@ -22,6 +22,7 @@ namespace MaruSikaku.Editor
         /// <summary>ステージデザイン画面のデータソース</summary>
         private StageDesignDataSource _dataSource = new();
         private StageGridView _gridView;
+        private StageObjectPropertyView _propertyView;
 
         [MenuItem("Tools/StageDesign")]
         public static void Open()
@@ -35,6 +36,10 @@ namespace MaruSikaku.Editor
             _gridView.Data = _dataSource.StageData;
             _gridView.EditContext = _dataSource.EditContext;
 
+            _propertyView = new();
+            _propertyView.Data = _dataSource.StageData;
+            _propertyView.EditContext = _dataSource.EditContext;
+
             // UXML, USSをロード
             var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(Path.Combine(DIRECTORY_PATH, UXML_FILE_NAME));
             var uss = AssetDatabase.LoadAssetAtPath<StyleSheet>(Path.Combine(DIRECTORY_PATH, USS_FILE_NAME));
@@ -47,6 +52,7 @@ namespace MaruSikaku.Editor
             // データソースの設定
             rootVisualElement.Q<VisualElement>("stageEditorRoot").dataSource = _dataSource;
             rootVisualElement.Q<ScrollView>("gridScrollView").Add(_gridView);
+            rootVisualElement.Q<VisualElement>("objectPropertyContainer").Add(_propertyView);
 
             // header部分のボタン処理イベントの登録
             rootVisualElement.Q<Button>("browseButton").clicked += OnBrowse;
@@ -130,9 +136,11 @@ namespace MaruSikaku.Editor
             {
                 case nameof(StageDesignDataSource.StageData):
                     _gridView.Data = _dataSource.StageData;
+                    _propertyView.Data = _dataSource.StageData;
                     break;
                 case nameof(StageDesignDataSource.EditContext):
                     _gridView.EditContext = _dataSource.EditContext;
+                    _propertyView.EditContext = _dataSource.EditContext;
                     break;
             }
         }

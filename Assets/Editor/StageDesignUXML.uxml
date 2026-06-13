@@ -100,6 +100,33 @@
                         </Bindings>
                     </ui:IntegerField>
                 </ui:VisualElement>
+                <ui:Label text="Player Goal" class="section-title"/>
+                <ui:VisualElement data-source-path="" name="" class="property-row">
+                    <ui:Label text="Maru" class="property-label"/>
+                    <ui:IntegerField label="" value="0" name="maruStartXField" is-delayed="true" class="coordinate-field">
+                        <Bindings>
+                            <ui:DataBinding property="value" data-source-path="MaruStartX" binding-mode="TwoWay"/>
+                        </Bindings>
+                    </ui:IntegerField>
+                    <ui:IntegerField label="" value="0" name="maruStartYField" is-delayed="true" class="coordinate-field">
+                        <Bindings>
+                            <ui:DataBinding property="value" data-source-path="MaruStartY" binding-mode="TwoWay"/>
+                        </Bindings>
+                    </ui:IntegerField>
+                </ui:VisualElement>
+                <ui:VisualElement class="property-row">
+                    <ui:Label text="Sikaku" class="property-label"/>
+                    <ui:IntegerField label="" value="0" name="sikakuStartXField" is-delayed="true" class="coordinate-field">
+                        <Bindings>
+                            <ui:DataBinding property="value" data-source-path="SikakuStartX" binding-mode="TwoWay"/>
+                        </Bindings>
+                    </ui:IntegerField>
+                    <ui:IntegerField label="" value="0" name="sikakuStartYField" is-delayed="true" class="coordinate-field">
+                        <Bindings>
+                            <ui:DataBinding property="value" data-source-path="SikakuStartY" binding-mode="TwoWay"/>
+                        </Bindings>
+                    </ui:IntegerField>
+                </ui:VisualElement>
                 <ui:VisualElement name="objectPropertyContainer" class="property-section"/>
             </ui:VisualElement>
         </ui:VisualElement>

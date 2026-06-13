@@ -94,6 +94,7 @@ namespace MaruSikaku.Editor.Data
                 if (_editMode == value) { return; }
 
                 _editMode = value;
+                if (value is not EStageEditMode.Select) { SelectedCell = null; }
                 Notify();
             }
         }
