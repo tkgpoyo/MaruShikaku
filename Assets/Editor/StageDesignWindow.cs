@@ -20,6 +20,8 @@ namespace MaruSikaku.Editor
         private const string USS_FILE_NAME = @"StageDesignUSS.uss";
         /// <summary>StageDesignEditor用のUXMLファイル</summary>
         private const string UXML_FILE_NAME = @"StageDesignUXML.uxml";
+        /// <summary>選択中のボタンのUSSクラス名</summary>
+        private const string TOOL_BUTTON_SELECTED_CLASS = "tool-button-selected";
 
         /// <summary>ステージデザイン画面のデータソース</summary>
         private StageDesignDataSource _dataSource = new();
@@ -157,11 +159,6 @@ namespace MaruSikaku.Editor
         {
             _dataSource.EditContext.EditMode = editMode;
 
-            // Tool Button の色をリセット
-            foreach (var toolButton in GetAllToolButtons())
-            {
-                toolButton.style.backgroundColor = StyleKeyword.Null;   // ボタンの色をリセット
-            }
             // 選択されたボタンをHighlight状態にする
             HighlightCurrentToolButton(editMode);
         }
@@ -218,9 +215,11 @@ namespace MaruSikaku.Editor
 
         private void HighlightCurrentToolButton(EStageEditMode mode)
         {
-            var highlightColor = Color.Lerp(Color.white, Color.black, 0.45f);
-            var button = GetToolButton(mode);
-            button.style.backgroundColor = highlightColor;
+            foreach (var toolButton in GetAllToolButtons())
+            {
+                toolButton.RemoveFromClassList(TOOL_BUTTON_SELECTED_CLASS);
+            }
+            GetToolButton(mode).AddToClassList(TOOL_BUTTON_SELECTED_CLASS);
         }
     }
 }
