@@ -239,11 +239,12 @@ namespace MaruSikaku.Editor.Custom
             painter.BeginPath();
 
             var hoverCell = (Vector2Int)EditContext.HoverCell;     // マウス移動イベントで上書きされる恐れがあるため，マウスが乗っているセルの場所を保存
-            var hoverRect = new Rect() { 
-                xMin = hoverCell.x * _cellPixel, xMax = (hoverCell.x + 1) * _cellPixel,
-                yMin = hoverCell.y * _cellPixel, yMax = (hoverCell.y + 1) * _cellPixel
-            };                                                      // マウスが乗っているセルのRect
-            painter.Rect(hoverRect);
+            //var hoverRect = new Rect() { 
+                //xMin = hoverCell.x * _cellPixel, xMax = (hoverCell.x + 1) * _cellPixel,
+                //yMin = hoverCell.y * _cellPixel, yMax = (hoverCell.y + 1) * _cellPixel
+            //};                                                      // マウスが乗っているセルのRect
+            //painter.Rect(hoverRect);
+            painter.Rect(CellToRect(hoverCell));
 
             painter.Fill();
         }
@@ -295,9 +296,9 @@ namespace MaruSikaku.Editor.Custom
                         // ブロックのヒビ部分を描画
                         painter.BeginPath();
                         painter.fillColor = Color.black;
-                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.4f));
+                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 1f));
                         painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 1f));
                         painter.Fill();
                         painter.ClosePath();
                         break;
@@ -312,8 +313,8 @@ namespace MaruSikaku.Editor.Custom
                     case EStageObjectType.Spring:
                         // バネの土台部分
                         var springBase1TopY = rect.yMin;
-                        var springBase1BottomY = CellToPixel(stageObject.Pos, y: 0.2f).y;
-                        var springBase2TopY = CellToPixel(stageObject.Pos, y: 0.8f).y;
+                        var springBase1BottomY = CellToPixel(stageObject.Pos, y: 0.8f).y;
+                        var springBase2TopY = CellToPixel(stageObject.Pos, y: 0.2f).y;
                         var springBase2BottomY = rect.yMax;
                         painter.BeginPath();
                         painter.strokeColor = Color.black;
@@ -322,15 +323,15 @@ namespace MaruSikaku.Editor.Custom
                         {
                             xMin = rect.xMin,
                             xMax = rect.xMax,
-                            yMin = springBase1TopY,
-                            yMax = springBase1BottomY
+                            yMin = springBase1BottomY,
+                            yMax = springBase1TopY
                         });
                         painter.Rect(new Rect()
                         {
                             xMin = rect.xMin,
                             xMax = rect.xMax,
-                            yMin = springBase2TopY,
-                            yMax = springBase2BottomY
+                            yMin = springBase2BottomY,
+                            yMax = springBase2TopY
                         });
                         painter.Fill();
                         painter.Stroke();
@@ -339,29 +340,29 @@ namespace MaruSikaku.Editor.Custom
                         painter.BeginPath();
                         painter.fillColor = Color.black;
                         painter.strokeColor = Color.black;
-                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.2f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.35f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.5f));
+                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.8f));
                         painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.65f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.8f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.8f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.65f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.35f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.2f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.5f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.35f));
                         painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.2f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.2f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.35f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.5f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.85f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.8f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.8f));
 
-                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.2f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.35f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.5f));
+                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.8f));
                         painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.65f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.8f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.8f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.65f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.35f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.2f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.5f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.35f));
                         painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.2f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.2f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.35f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.65f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.8f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.8f));
 
                         painter.Fill();
                         painter.Stroke();
@@ -371,26 +372,26 @@ namespace MaruSikaku.Editor.Custom
                         painter.BeginPath();
                         painter.fillColor = Color.yellow;
                         painter.strokeColor = Color.black;
-                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.8f));
+                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.2f));
                         painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
                         painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.8f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.8f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.2f));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.2f));
                         painter.Fill();
                         painter.Stroke();
                         painter.ClosePath();
                         // 土台部分
                         painter.BeginPath();
-                        painter.fillColor = Color.Lerp(Color.gray, Color.black, 0.6f);
+                        painter.fillColor = Color.Lerp(Color.gray, Color.black, 0.4f);
                         painter.strokeColor = Color.black;
-                        var switchBaseTopY = CellToPixel(stageObject.Pos, y: 0.8f).y;
+                        var switchBaseTopY = CellToPixel(stageObject.Pos, y: 0.2f).y;
                         var switchBaseBottomY = rect.yMax;
                         painter.Rect(new()
                         {
                             xMin = rect.xMin,
                             xMax = rect.xMax,
-                            yMin = switchBaseTopY,
-                            yMax = switchBaseBottomY
+                            yMin = switchBaseBottomY,
+                            yMax = switchBaseTopY
                         });
                         painter.Fill();
                         painter.Stroke();
@@ -400,11 +401,11 @@ namespace MaruSikaku.Editor.Custom
                         painter.BeginPath();
                         painter.fillColor = Color.yellow;
                         painter.strokeColor = Color.black;
-                        painter.MoveTo(CellToPixel(stageObject.Pos));
+                        painter.MoveTo(CellToPixel(stageObject.Pos, y: 1));
                         painter.LineTo(CellToPixel(stageObject.Pos, y: 0.5f));
                         painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f));
-                        painter.LineTo(CellToPixel(stageObject.Pos));
+                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 1));
+                        painter.LineTo(CellToPixel(stageObject.Pos, y: 1));
                         painter.Fill();
                         painter.Stroke();
                         painter.ClosePath();
@@ -434,6 +435,7 @@ namespace MaruSikaku.Editor.Custom
             {
                 painter.fillColor = Color.red;
                 painter.strokeColor = Color.black;
+                painter.lineWidth = 1f;
                 painter.BeginPath();
                 painter.Arc(CellToPixel(Data.MaruStart, x: 0.5f, y: 0.5f), _cellPixel * 0.4f, new Angle(0f), new Angle(360f));
                 painter.Fill();
@@ -444,6 +446,7 @@ namespace MaruSikaku.Editor.Custom
             {
                 painter.fillColor = Color.blue;
                 painter.strokeColor = Color.black;
+                painter.lineWidth = 1f;
                 painter.BeginPath();
                 painter.MoveTo(CellToPixel(Data.SikakuStart, x: 0.1f, y: 0.1f));
                 painter.LineTo(CellToPixel(Data.SikakuStart, x: 0.9f, y: 0.1f));
@@ -459,7 +462,7 @@ namespace MaruSikaku.Editor.Custom
         private Vector2Int PointerToCell(Vector2 position)
         {
             var x = Mathf.FloorToInt(position.x / _cellPixel);
-            var y = Mathf.FloorToInt(position.y / _cellPixel);
+            var y = Data.SizeY - Mathf.CeilToInt(position.y / _cellPixel);
             return new(x, y);
         }
 
@@ -484,8 +487,8 @@ namespace MaruSikaku.Editor.Custom
             {
                 xMin = cellPos.x * _cellPixel,
                 xMax = (cellPos.x + 1) * _cellPixel,
-                yMin = cellPos.y * _cellPixel,
-                yMax = (cellPos.y + 1) * _cellPixel
+                yMin = (Data.SizeY - (cellPos.y + 1)) * _cellPixel,
+                yMax = (Data.SizeY - cellPos.y) * _cellPixel
             };
         }
 
@@ -501,7 +504,7 @@ namespace MaruSikaku.Editor.Custom
             x = Mathf.Clamp(x, 0, 1);
             y = Mathf.Clamp(y, 0, 1);
 
-            return new ((cell.x + x) * _cellPixel, (cell.y + y) * _cellPixel);
+            return new ((cell.x + x) * _cellPixel, (Data.SizeY - (cell.y + y)) * _cellPixel);
         }
 
         /// <summary>
