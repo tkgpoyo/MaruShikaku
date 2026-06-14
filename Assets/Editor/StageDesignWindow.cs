@@ -7,6 +7,8 @@ using MaruSikaku.Editor.Data;
 using MaruSikaku.Stage;
 using System.Runtime.InteropServices;
 using System.ComponentModel;
+using Codice.CM.Common.Merge;
+using System;
 
 namespace MaruSikaku.Editor
 {
@@ -23,6 +25,19 @@ namespace MaruSikaku.Editor
         private StageDesignDataSource _dataSource = new();
         private StageGridView _gridView;
         private StageObjectPropertyView _propertyView;
+
+        #region ボタン一覧
+        private Button _selectToolButton;
+        private Button _eraseToolButton;
+        private Button _groundToolButton;
+        private Button _springToolButton;
+        private Button _fragileToolButton;
+        private Button _movableToolButton;
+        private Button _switchToolButton;
+        private Button _wallToolButton;
+        private Button _maruStartToolButton;
+        private Button _sikakuStartToolButton;
+        #endregion ボタン一覧
 
         [MenuItem("Tools/StageDesign")]
         public static void Open()
@@ -59,16 +74,29 @@ namespace MaruSikaku.Editor
             rootVisualElement.Q<Button>("saveButton").clicked += OnSave;
             rootVisualElement.Q<Button>("saveAsButton").clicked += OnSaveAs;
             // tool部分のボタン処理イベントの登録
-            rootVisualElement.Q<Button>("selectToolButton").clicked += () => { OnChangeTool(EStageEditMode.Select); };
-            rootVisualElement.Q<Button>("eraseToolButton").clicked += () => { OnChangeTool(EStageEditMode.Erase); };
-            rootVisualElement.Q<Button>("groundToolButton").clicked += () => { OnChangeTool(EStageEditMode.Ground); };
-            rootVisualElement.Q<Button>("springToolButton").clicked += () => { OnChangeTool(EStageEditMode.Spring); };
-            rootVisualElement.Q<Button>("fragileToolButton").clicked += () => { OnChangeTool(EStageEditMode.Fragile); };
-            rootVisualElement.Q<Button>("movableToolButton").clicked += () => { OnChangeTool(EStageEditMode.Movable); };
-            rootVisualElement.Q<Button>("switchToolButton").clicked += () => { OnChangeTool(EStageEditMode.Switch); };
-            rootVisualElement.Q<Button>("wallToolButton").clicked += () => { OnChangeTool(EStageEditMode.Wall); };
-            rootVisualElement.Q<Button>("maruStartToolButton").clicked += () => { OnChangeTool(EStageEditMode.MaruStart); };
-            rootVisualElement.Q<Button>("sikakuStartToolButton").clicked += () => { OnChangeTool(EStageEditMode.SikakuStart); };
+            _selectToolButton = rootVisualElement.Q<Button>("selectToolButton");
+            _eraseToolButton = rootVisualElement.Q<Button>("eraseToolButton");
+            _groundToolButton = rootVisualElement.Q<Button>("groundToolButton");
+            _springToolButton = rootVisualElement.Q<Button>("springToolButton");
+            _fragileToolButton = rootVisualElement.Q<Button>("fragileToolButton");
+            _movableToolButton = rootVisualElement.Q<Button>("movableToolButton");
+            _switchToolButton = rootVisualElement.Q<Button>("switchToolButton");
+            _wallToolButton = rootVisualElement.Q<Button>("wallToolButton");
+            _maruStartToolButton = rootVisualElement.Q<Button>("maruStartToolButton");
+            _sikakuStartToolButton = rootVisualElement.Q<Button>("sikakuStartToolButton");
+            _selectToolButton.clicked += () => { OnChangeTool(EStageEditMode.Select); };
+            _eraseToolButton.clicked += () => { OnChangeTool(EStageEditMode.Erase); };
+            _groundToolButton.clicked += () => { OnChangeTool(EStageEditMode.Ground); };
+            _springToolButton.clicked += () => { OnChangeTool(EStageEditMode.Spring); };
+            _fragileToolButton.clicked += () => { OnChangeTool(EStageEditMode.Fragile); };
+            _movableToolButton.clicked += () => { OnChangeTool(EStageEditMode.Movable); };
+            _switchToolButton.clicked += () => { OnChangeTool(EStageEditMode.Switch); };
+            _wallToolButton.clicked += () => { OnChangeTool(EStageEditMode.Wall); };
+            _maruStartToolButton.clicked += () => { OnChangeTool(EStageEditMode.MaruStart); };
+            _sikakuStartToolButton.clicked += () => { OnChangeTool(EStageEditMode.SikakuStart); };
+
+            // 最初に選択されている Tool Button を Highlight にする
+            HighlightCurrentToolButton(_dataSource.EditContext.EditMode);
         }
 
         private void OnBrowse()
@@ -128,6 +156,14 @@ namespace MaruSikaku.Editor
         private void OnChangeTool(EStageEditMode editMode)
         {
             _dataSource.EditContext.EditMode = editMode;
+
+            // Tool Button の色をリセット
+            foreach (var toolButton in GetAllToolButtons())
+            {
+                toolButton.style.backgroundColor = StyleKeyword.Null;   // ボタンの色をリセット
+            }
+            // 選択されたボタンをHighlight状態にする
+            HighlightCurrentToolButton(editMode);
         }
 
         private void OnDataSourcePropertyChanged(object sender, BindablePropertyChangedEventArgs e)
@@ -139,10 +175,52 @@ namespace MaruSikaku.Editor
                     _propertyView.Data = _dataSource.StageData;
                     break;
                 case nameof(StageDesignDataSource.EditContext):
-                    _gridView.EditContext = _dataSource.EditContext;
+                    _gridView.EditContext = _dataSource.EditContext; 
                     _propertyView.EditContext = _dataSource.EditContext;
                     break;
             }
+        }
+
+        private Button[] GetAllToolButtons()
+        {
+            return new Button[]
+            {
+                _selectToolButton,
+                _eraseToolButton,
+                _groundToolButton,
+                _springToolButton,
+                _fragileToolButton,
+                _movableToolButton,
+                _switchToolButton,
+                _wallToolButton,
+                _maruStartToolButton,
+                _sikakuStartToolButton
+            };
+        }
+
+        private Button GetToolButton(EStageEditMode mode)
+        {
+            return mode switch
+            {
+                EStageEditMode.Select => _selectToolButton,
+                EStageEditMode.Erase => _eraseToolButton,
+                EStageEditMode.Ground => _groundToolButton,
+                EStageEditMode.Spring => _springToolButton,
+                EStageEditMode.Fragile => _fragileToolButton,
+                EStageEditMode.Movable => _movableToolButton,
+                EStageEditMode.Switch => _switchToolButton,
+                EStageEditMode.Wall => _wallToolButton,
+                EStageEditMode.MaruStart => _maruStartToolButton,
+                EStageEditMode.SikakuStart => _sikakuStartToolButton,
+                _ => throw new NotImplementedException($"{mode}は未実装です．")
+            };
+        }
+
+        private void HighlightCurrentToolButton(EStageEditMode mode)
+        {
+            var highlightColor = Color.Lerp(Color.white, Color.black, 0.45f);
+            var button = GetToolButton(mode);
+            button.style.backgroundColor = highlightColor;
         }
     }
 }

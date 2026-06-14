@@ -29,11 +29,11 @@ namespace MaruSikaku.Editor.Data
             {
                 if (_stageData == value) { return; }
                 if (_stageData != null) {
-                    _stageData.propertyChanged -= OnChildPropertyChanged;
+                    _stageData.propertyChanged -= OnStageDataChanged;
                 }
                 _stageData = value;
                 if (_stageData != null) {
-                    _stageData.propertyChanged += OnChildPropertyChanged;
+                    _stageData.propertyChanged += OnStageDataChanged;
                 }
                 Notify();
             }
@@ -61,25 +61,35 @@ namespace MaruSikaku.Editor.Data
             private set {
                 if (_editContext == value) { return; }
                 if (_editContext != null) {
-                    _editContext.propertyChanged -= OnChildPropertyChanged;
+                    _editContext.propertyChanged -= OnEditContextChanged;
                 }
                 _editContext = value;
                 if (_editContext != null) {
-                    _editContext.propertyChanged += OnChildPropertyChanged;
+                    _editContext.propertyChanged += OnEditContextChanged;
                 }
                 Notify();
             }
         }
         private StageEditContext _editContext;
 
+        private void OnStageDataChanged(object sender, BindablePropertyChangedEventArgs e)
+        {
+            NotifyChild(nameof(StageData), e);
+        }
+
+        private void OnEditContextChanged(object sender, BindablePropertyChangedEventArgs e)
+        {
+            NotifyChild(nameof(EditContext), e);
+        }
+
         /// <summary>
         /// 子要素の変更通知を行います． 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnChildPropertyChanged(object sender, BindablePropertyChangedEventArgs e)
+        private void NotifyChild(string parentName, BindablePropertyChangedEventArgs e)
         {
-            var path = $"{nameof(EditContext)}.{e.propertyName}";
+            var path = $"{parentName}.{e.propertyName}";
 
             propertyChanged?.Invoke(
                 this,
