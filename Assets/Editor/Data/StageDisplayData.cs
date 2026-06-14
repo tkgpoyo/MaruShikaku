@@ -31,7 +31,7 @@ namespace MaruSikaku.Editor.Data
                 Notify(nameof(MaruStartY));
             }
         }
-        private Vector2Int _maruStart = Vector2Int.zero;
+        private Vector2Int _maruStart = new (2, 0);
 
         /// <summary>四角キャラクターの初期位置</summary>
         public Vector2Int SikakuStart
@@ -45,7 +45,7 @@ namespace MaruSikaku.Editor.Data
                 Notify(nameof(SikakuStartY));
             }
         }
-        private Vector2Int _SikakuStart = Vector2Int.zero;
+        private Vector2Int _SikakuStart = new (1, 0);
 
         /// <summary>ステージのサイズ</summary>
         public Vector2Int Size

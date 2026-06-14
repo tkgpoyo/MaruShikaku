@@ -85,13 +85,10 @@ namespace MaruSikaku.Editor.Custom
                 case nameof(StageDisplayData.SizeX):
                 case nameof(StageDisplayData.SizeY):
                     UpdateView();
-                    MarkDirtyRepaint();
-                    break;
-                case nameof(StageDisplayData.TerrainCells):
-                case nameof(StageDisplayData.StageObjects):
-                    MarkDirtyRepaint();
                     break;
             }
+
+            MarkDirtyRepaint();
         }
 
         private void OnEditContextChanged(object sender, BindablePropertyChangedEventArgs e)
@@ -141,7 +138,12 @@ namespace MaruSikaku.Editor.Custom
                     EditContext.SelectedCell = hoverCell;
                     break;
                 case EStageEditMode.MaruStart:
+                    if (Data.TerrainDic.ContainsKey(hoverCell) || Data.StageObjectDic.ContainsKey(hoverCell)) { return; }
+                    Data.MaruStart = hoverCell;
+                    break;
                 case EStageEditMode.SikakuStart:
+                    if (Data.TerrainDic.ContainsKey(hoverCell) || Data.StageObjectDic.ContainsKey(hoverCell)) { return; }
+                    Data.SikakuStart = hoverCell;
                     break;
             }
 
@@ -186,6 +188,7 @@ namespace MaruSikaku.Editor.Custom
             DrawTerrainCells(painter);
             DrawStageObjects(painter);
             DrawSelectedCell(painter);
+            DrawPlayerStartPos(painter);
         }
 
         private void UpdateView()
@@ -425,6 +428,34 @@ namespace MaruSikaku.Editor.Custom
             
         }
 
+        private void DrawPlayerStartPos(Painter2D painter)
+        {
+            if (IsInsideStage(Data.MaruStart))
+            {
+                painter.fillColor = Color.red;
+                painter.strokeColor = Color.black;
+                painter.BeginPath();
+                painter.Arc(CellToPixel(Data.MaruStart, x: 0.5f, y: 0.5f), _cellPixel * 0.4f, new Angle(0f), new Angle(360f));
+                painter.Fill();
+                painter.Stroke();
+                painter.ClosePath();
+            }
+            if (IsInsideStage(Data.SikakuStart))
+            {
+                painter.fillColor = Color.blue;
+                painter.strokeColor = Color.black;
+                painter.BeginPath();
+                painter.MoveTo(CellToPixel(Data.SikakuStart, x: 0.1f, y: 0.1f));
+                painter.LineTo(CellToPixel(Data.SikakuStart, x: 0.9f, y: 0.1f));
+                painter.LineTo(CellToPixel(Data.SikakuStart, x: 0.9f, y: 0.9f));
+                painter.LineTo(CellToPixel(Data.SikakuStart, x: 0.1f, y: 0.9f));
+                painter.LineTo(CellToPixel(Data.SikakuStart, x: 0.1f, y: 0.1f));
+                painter.Fill();
+                painter.Stroke();
+                painter.ClosePath();
+            }
+        }
+
         private Vector2Int PointerToCell(Vector2 position)
         {
             var x = Mathf.FloorToInt(position.x / _cellPixel);
@@ -465,7 +496,7 @@ namespace MaruSikaku.Editor.Custom
         /// <param name="x">セル内のx位置(0~1)</param>
         /// <param name="y">セル内のy位置(0~1)</param>
         /// <returns>Pixel座標</returns>
-        private Vector2 CellToPixel(Vector2 cell, float x = 0, float y = 0)
+        private Vector2 CellToPixel(Vector2Int cell, float x = 0, float y = 0)
         {
             x = Mathf.Clamp(x, 0, 1);
             y = Mathf.Clamp(y, 0, 1);
