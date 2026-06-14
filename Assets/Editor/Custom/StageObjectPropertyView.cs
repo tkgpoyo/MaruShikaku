@@ -76,6 +76,7 @@ namespace MaruSikaku.Editor.Custom
 
             _currentObject = selectedObject;
             BuildCommonFields(selectedObject);
+            BuildSpecificTypeFields(selectedObject);
         }
 
         private void BuildCommonFields(StageObject stageObject)
@@ -96,6 +97,27 @@ namespace MaruSikaku.Editor.Custom
             posYField.SetValueWithoutNotify(stageObject.Pos.y);
             posYField.SetEnabled(false);
             Add(posYField);
+        }
+
+        private void BuildSpecificTypeFields(StageObject stageObject)
+        {
+            switch (stageObject.Type)
+            {
+                case EStageObjectType.Wall:
+                    BuildWallFields((WallObject)stageObject);
+                    break;
+            }
+        }
+
+        private void BuildWallFields(WallObject wall)
+        {
+            var switchIdField = new IntegerField("Switch ID");
+            switchIdField.SetValueWithoutNotify(wall.SwitchId);
+            switchIdField.RegisterValueChangedCallback(evt =>
+            {
+                wall.SwitchId = evt.newValue;
+            });
+            Add(switchIdField);
         }
 
         private void UnbindCurrentObject()

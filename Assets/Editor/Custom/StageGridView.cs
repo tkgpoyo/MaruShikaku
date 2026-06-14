@@ -49,6 +49,8 @@ namespace MaruSikaku.Editor.Custom
                 if (_data != null)
                 {
                     _data.propertyChanged += OnStageDataChanged;
+
+                    _nextId = _data.StageObjects.Count <= 0 ? 0 : _data.StageObjects.Max(stageObject => stageObject.Id + 1);
                 }
 
                 MarkDirtyRepaint();
@@ -136,6 +138,7 @@ namespace MaruSikaku.Editor.Custom
                     if (Data.TerrainDic.ContainsKey(hoverCell) || Data.StageObjectDic.ContainsKey(hoverCell)) { return; }
                     var stageObject = InstantiateStageObject(hoverCell, EditContext.EditMode);
                     Data.AddStageObject(stageObject);
+                    EditContext.SelectedCell = hoverCell;
                     break;
                 case EStageEditMode.MaruStart:
                 case EStageEditMode.SikakuStart:
