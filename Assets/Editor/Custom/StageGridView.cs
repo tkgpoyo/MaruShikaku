@@ -1,10 +1,6 @@
-using Codice.Client.Common.GameUI;
 using MaruSikaku.Editor.Data;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
 using MaruSikaku.Stage;
@@ -13,6 +9,7 @@ namespace MaruSikaku.Editor.Custom
 {
     public class StageGridView : VisualElement
     {
+        private const int LEFT_MOUSE_BUTTON_MASK = 0x00_00_00_01;
         private const float CELL_DEFAULT_PIXEL = 20f;
         private static readonly Color BACKGROUND_COLOR = Color.softBlue;
         private static readonly Color GRID_COLOR = Color.black;
@@ -21,6 +18,7 @@ namespace MaruSikaku.Editor.Custom
 
         private float _cellPixel => CELL_DEFAULT_PIXEL * EditContext?.ZoomRate ?? 1f;
         private int _nextId = 0;
+        private Vector2Int? _lastPaintedCell = null;
 
         public StageGridView()
         {
@@ -28,9 +26,11 @@ namespace MaruSikaku.Editor.Custom
 
             UpdateView();
 
-            RegisterCallback<ClickEvent>(OnMouseClick);
+            RegisterCallback<PointerDownEvent>(OnPointerDown);
             RegisterCallback<PointerMoveEvent>(OnPointerMove);
+            RegisterCallback<PointerUpEvent>(OnPointerUp);
             RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
+            RegisterCallback<PointerEnterEvent>(OnPointerEnter);
 
             generateVisualContent += OnGenerateVisualContent;
         }
@@ -102,29 +102,26 @@ namespace MaruSikaku.Editor.Custom
             }
         }
 
-        private void OnMouseClick(ClickEvent e)
+        private void EditStage(Vector2Int pos, EStageEditMode mode)
         {
-            if (EditContext.HoverCell == null) { return; }
-            var hoverCell = (Vector2Int)EditContext.HoverCell;
-
-            switch (EditContext.EditMode)
+            switch (mode)
             {
                 case EStageEditMode.Select:
-                    EditContext.SelectedCell = hoverCell;
+                    EditContext.SelectedCell = pos;
                     break;
                 case EStageEditMode.Erase:
-                    if (Data.TerrainDic.ContainsKey(hoverCell))
+                    if (Data.TerrainDic.ContainsKey(pos))
                     {
-                        Data.RemoveTerrainCell(Data.TerrainDic[hoverCell]);
+                        Data.RemoveTerrainCell(Data.TerrainDic[pos]);
                     }
-                    if (Data.StageObjectDic.ContainsKey(hoverCell))
+                    if (Data.StageObjectDic.ContainsKey(pos))
                     {
-                        Data.RemoveStageObject(Data.StageObjectDic[hoverCell]);
+                        Data.RemoveStageObject(Data.StageObjectDic[pos]);
                     }
                     break;
                 case EStageEditMode.Ground:
-                    if (Data.TerrainDic.ContainsKey(hoverCell) || Data.StageObjectDic.ContainsKey(hoverCell)) { return; }
-                    var ground = new StageTerrainCell(hoverCell, ETerrainType.Ground);
+                    if (Data.TerrainDic.ContainsKey(pos) || Data.StageObjectDic.ContainsKey(pos)) { return; }
+                    var ground = new StageTerrainCell(pos, ETerrainType.Ground);
                     Data.AddTerrainCell(ground);
                     break;
                 case EStageEditMode.Spring:
@@ -132,18 +129,18 @@ namespace MaruSikaku.Editor.Custom
                 case EStageEditMode.Movable:
                 case EStageEditMode.Switch:
                 case EStageEditMode.Wall:
-                    if (Data.TerrainDic.ContainsKey(hoverCell) || Data.StageObjectDic.ContainsKey(hoverCell)) { return; }
-                    var stageObject = InstantiateStageObject(hoverCell, EditContext.EditMode);
+                    if (Data.TerrainDic.ContainsKey(pos) || Data.StageObjectDic.ContainsKey(pos)) { return; }
+                    var stageObject = InstantiateStageObject(pos, EditContext.EditMode);
                     Data.AddStageObject(stageObject);
-                    EditContext.SelectedCell = hoverCell;
+                    EditContext.SelectedCell = pos;
                     break;
                 case EStageEditMode.MaruStart:
-                    if (Data.TerrainDic.ContainsKey(hoverCell) || Data.StageObjectDic.ContainsKey(hoverCell)) { return; }
-                    Data.MaruStart = hoverCell;
+                    if (Data.TerrainDic.ContainsKey(pos) || Data.StageObjectDic.ContainsKey(pos)) { return; }
+                    Data.MaruStart = pos;
                     break;
                 case EStageEditMode.SikakuStart:
-                    if (Data.TerrainDic.ContainsKey(hoverCell) || Data.StageObjectDic.ContainsKey(hoverCell)) { return; }
-                    Data.SikakuStart = hoverCell;
+                    if (Data.TerrainDic.ContainsKey(pos) || Data.StageObjectDic.ContainsKey(pos)) { return; }
+                    Data.SikakuStart = pos;
                     break;
             }
 
@@ -161,21 +158,98 @@ namespace MaruSikaku.Editor.Custom
             }
         }
 
+        /// <summary>
+        /// ドラッグ配置可能かどうかを判定します．
+        /// </summary>
+        /// <param name="mode">編集モード</param>
+        /// <returns>ドラッグ編集可能かどうか</returns>
+        private bool CanDragPaint(EStageEditMode mode) => mode is not EStageEditMode.Switch and not EStageEditMode.Wall and not EStageEditMode.Spring;
+
+        /// <summary>
+        /// 左クリックされているかどうかを判定します．
+        /// </summary>
+        /// <param name="e">ポインターのイベント</param>
+        /// <returns>左クリックされているか</returns>
+        private bool IsLeftButtonPressed(IPointerEvent e) => (e.pressedButtons & LEFT_MOUSE_BUTTON_MASK) != 0;
+
+        private void OnPointerDown(PointerDownEvent e)
+        {
+            if (!IsLeftButtonPressed(e)) { return; } // 左クリックのみ
+            e.StopPropagation();
+
+            var cell = PointerToCell(e.localPosition);
+            if (!IsInsideStage(cell)) { return; }
+
+            _lastPaintedCell = cell;
+
+            this.CapturePointer(e.pointerId);
+
+            EditStage(cell, EditContext.EditMode);
+        }
+
         private void OnPointerMove(PointerMoveEvent e)
         {
+            e.StopPropagation();
+
             var cell = PointerToCell(e.localPosition);
             if (!IsInsideStage(cell)) {                         // ステージ外にマウスがある場合
                 EditContext.HoverCell = null;
                 return;
             }
-            if (EditContext.HoverCell == cell) { return; }     // 以前のhover中のセルと現在のhover中のセルが同じ場合，変更がないためhover中のセルを更新せず抜ける
+            if (EditContext.HoverCell != cell)
+            {
+                EditContext.HoverCell = cell;
+            }
 
-            EditContext.HoverCell = cell;                      // hover中のセルに設定
+            if (!IsLeftButtonPressed(e))
+            {
+                _lastPaintedCell = null;
+                return;
+            }
+
+            if (!CanDragPaint(EditContext.EditMode)) { return; }
+            if (cell == _lastPaintedCell) { return; }
+
+            _lastPaintedCell = cell;
+
+            EditStage(cell, EditContext.EditMode);
+        }
+
+        private void OnPointerUp(PointerUpEvent e)
+        {
+            e.StopPropagation();
+
+            _lastPaintedCell = null;
+
+            if (this.HasPointerCapture(e.pointerId))
+            {
+                this.ReleasePointer(e.pointerId);
+            }
         }
 
         private void OnPointerLeave(PointerLeaveEvent e)
         {
+            e.StopPropagation();
+
             EditContext.HoverCell = null;
+            _lastPaintedCell = null;
+
+            if (this.HasPointerCapture(e.pointerId))
+            {
+                this.ReleasePointer(e.pointerId);
+            }
+        }
+
+        private void OnPointerEnter(PointerEnterEvent e)
+        {
+            e.StopPropagation();
+
+            var cell = PointerToCell(e.localPosition);
+
+            if (IsInsideStage(cell))
+            {
+                EditContext.HoverCell = cell;
+            }
         }
 
         private void OnGenerateVisualContent(MeshGenerationContext context)
@@ -239,11 +313,6 @@ namespace MaruSikaku.Editor.Custom
             painter.BeginPath();
 
             var hoverCell = (Vector2Int)EditContext.HoverCell;     // マウス移動イベントで上書きされる恐れがあるため，マウスが乗っているセルの場所を保存
-            //var hoverRect = new Rect() { 
-                //xMin = hoverCell.x * _cellPixel, xMax = (hoverCell.x + 1) * _cellPixel,
-                //yMin = hoverCell.y * _cellPixel, yMax = (hoverCell.y + 1) * _cellPixel
-            //};                                                      // マウスが乗っているセルのRect
-            //painter.Rect(hoverRect);
             painter.Rect(CellToRect(hoverCell));
 
             painter.Fill();
@@ -257,18 +326,19 @@ namespace MaruSikaku.Editor.Custom
                 DrawTerrainCell(painter, terrainCell);
             }
 
-            void DrawTerrainCell(Painter2D painter, StageTerrainCell terrainCell)
+        }
+
+        private void DrawTerrainCell(Painter2D painter, StageTerrainCell terrainCell)
+        {
+            painter.BeginPath();
+            switch (terrainCell.Type)
             {
-                painter.BeginPath();
-                switch (terrainCell.Type)
-                {
-                    case ETerrainType.Ground:
-                        painter.fillColor = Color.black;
-                        break;
-                }
-                painter.Rect(CellToRect(terrainCell.Pos));
-                painter.Fill();
+                case ETerrainType.Ground:
+                    painter.fillColor = Color.black;
+                    break;
             }
+            painter.Rect(CellToRect(terrainCell.Pos));
+            painter.Fill();
         }
 
         private void DrawStageObjects(Painter2D painter)
@@ -279,138 +349,139 @@ namespace MaruSikaku.Editor.Custom
                 DrawStageObject(painter, stageObject);
             }
 
-            void DrawStageObject(Painter2D painter, StageObject stageObject)
+        }
+
+        private void DrawStageObject(Painter2D painter, StageObject stageObject)
+        {
+            var rect = CellToRect(stageObject.Pos);
+            switch (stageObject.Type)
             {
-                var rect = CellToRect(stageObject.Pos);
-                switch (stageObject.Type)
-                {
-                    case EStageObjectType.Fragile:
-                        painter.BeginPath();
-                        // ブロックの四角部分を描画
-                        painter.fillColor = Color.gray;
-                        painter.strokeColor = Color.black;
-                        painter.Rect(rect);
-                        painter.Fill();
-                        painter.Stroke();
-                        painter.ClosePath();
-                        // ブロックのヒビ部分を描画
-                        painter.BeginPath();
-                        painter.fillColor = Color.black;
-                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 1f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 1f));
-                        painter.Fill();
-                        painter.ClosePath();
-                        break;
-                    case EStageObjectType.Movable:
-                        painter.BeginPath();
-                        painter.fillColor = Color.darkGreen;
-                        painter.strokeColor = Color.black;
-                        painter.Rect(CellToRect(stageObject.Pos));
-                        painter.Fill();
-                        painter.Stroke();
-                        break;
-                    case EStageObjectType.Spring:
-                        // バネの土台部分
-                        var springBase1TopY = rect.yMin;
-                        var springBase1BottomY = CellToPixel(stageObject.Pos, y: 0.8f).y;
-                        var springBase2TopY = CellToPixel(stageObject.Pos, y: 0.2f).y;
-                        var springBase2BottomY = rect.yMax;
-                        painter.BeginPath();
-                        painter.strokeColor = Color.black;
-                        painter.fillColor = Color.Lerp(Color.gray, Color.black, 0.6f);
-                        painter.Rect(new Rect()
-                        {
-                            xMin = rect.xMin,
-                            xMax = rect.xMax,
-                            yMin = springBase1BottomY,
-                            yMax = springBase1TopY
-                        });
-                        painter.Rect(new Rect()
-                        {
-                            xMin = rect.xMin,
-                            xMax = rect.xMax,
-                            yMin = springBase2BottomY,
-                            yMax = springBase2TopY
-                        });
-                        painter.Fill();
-                        painter.Stroke();
-                        painter.ClosePath();
-                        // バネの縮む部分
-                        painter.BeginPath();
-                        painter.fillColor = Color.black;
-                        painter.strokeColor = Color.black;
-                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.8f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.65f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.35f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.2f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.2f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.35f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.85f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.8f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.8f));
+                case EStageObjectType.Fragile:
+                    painter.BeginPath();
+                    // ブロックの四角部分を描画
+                    painter.fillColor = Color.gray;
+                    painter.strokeColor = Color.black;
+                    painter.Rect(rect);
+                    painter.Fill();
+                    painter.Stroke();
+                    painter.ClosePath();
+                    // ブロックのヒビ部分を描画
+                    painter.BeginPath();
+                    painter.fillColor = Color.black;
+                    painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 1f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 1f));
+                    painter.Fill();
+                    painter.ClosePath();
+                    break;
+                case EStageObjectType.Movable:
+                    painter.BeginPath();
+                    painter.fillColor = Color.darkGreen;
+                    painter.strokeColor = Color.black;
+                    painter.Rect(CellToRect(stageObject.Pos));
+                    painter.Fill();
+                    painter.Stroke();
+                    break;
+                case EStageObjectType.Spring:
+                    // バネの土台部分
+                    var springBase1TopY = rect.yMin;
+                    var springBase1BottomY = CellToPixel(stageObject.Pos, y: 0.8f).y;
+                    var springBase2TopY = CellToPixel(stageObject.Pos, y: 0.2f).y;
+                    var springBase2BottomY = rect.yMax;
+                    painter.BeginPath();
+                    painter.strokeColor = Color.black;
+                    painter.fillColor = Color.Lerp(Color.gray, Color.black, 0.6f);
+                    painter.Rect(new Rect()
+                    {
+                        xMin = rect.xMin,
+                        xMax = rect.xMax,
+                        yMin = springBase1BottomY,
+                        yMax = springBase1TopY
+                    });
+                    painter.Rect(new Rect()
+                    {
+                        xMin = rect.xMin,
+                        xMax = rect.xMax,
+                        yMin = springBase2BottomY,
+                        yMax = springBase2TopY
+                    });
+                    painter.Fill();
+                    painter.Stroke();
+                    painter.ClosePath();
+                    // バネの縮む部分
+                    painter.BeginPath();
+                    painter.fillColor = Color.black;
+                    painter.strokeColor = Color.black;
+                    painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.8f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.65f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.35f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.2f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.2f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.35f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.85f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.8f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.6f, y: 0.8f));
 
-                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.8f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.65f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.35f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.2f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.2f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.35f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.65f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.8f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.8f));
+                    painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.8f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.65f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.35f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.2f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.2f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.35f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.65f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.8f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.4f, y: 0.8f));
 
-                        painter.Fill();
-                        painter.Stroke();
-                        break;
-                    case EStageObjectType.Switch:
-                        // 押す部分
-                        painter.BeginPath();
-                        painter.fillColor = Color.yellow;
-                        painter.strokeColor = Color.black;
-                        painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.2f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.2f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.2f));
-                        painter.Fill();
-                        painter.Stroke();
-                        painter.ClosePath();
-                        // 土台部分
-                        painter.BeginPath();
-                        painter.fillColor = Color.Lerp(Color.gray, Color.black, 0.4f);
-                        painter.strokeColor = Color.black;
-                        var switchBaseTopY = CellToPixel(stageObject.Pos, y: 0.2f).y;
-                        var switchBaseBottomY = rect.yMax;
-                        painter.Rect(new()
-                        {
-                            xMin = rect.xMin,
-                            xMax = rect.xMax,
-                            yMin = switchBaseBottomY,
-                            yMax = switchBaseTopY
-                        });
-                        painter.Fill();
-                        painter.Stroke();
-                        painter.ClosePath();
-                        break;
-                    case EStageObjectType.Wall:
-                        painter.BeginPath();
-                        painter.fillColor = Color.yellow;
-                        painter.strokeColor = Color.black;
-                        painter.MoveTo(CellToPixel(stageObject.Pos, y: 1));
-                        painter.LineTo(CellToPixel(stageObject.Pos, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
-                        painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 1));
-                        painter.LineTo(CellToPixel(stageObject.Pos, y: 1));
-                        painter.Fill();
-                        painter.Stroke();
-                        painter.ClosePath();
-                        break;
-                }
+                    painter.Fill();
+                    painter.Stroke();
+                    break;
+                case EStageObjectType.Switch:
+                    // 押す部分
+                    painter.BeginPath();
+                    painter.fillColor = Color.yellow;
+                    painter.strokeColor = Color.black;
+                    painter.MoveTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.2f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.7f, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.8f, y: 0.2f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.2f, y: 0.2f));
+                    painter.Fill();
+                    painter.Stroke();
+                    painter.ClosePath();
+                    // 土台部分
+                    painter.BeginPath();
+                    painter.fillColor = Color.Lerp(Color.gray, Color.black, 0.4f);
+                    painter.strokeColor = Color.black;
+                    var switchBaseTopY = CellToPixel(stageObject.Pos, y: 0.2f).y;
+                    var switchBaseBottomY = rect.yMax;
+                    painter.Rect(new()
+                    {
+                        xMin = rect.xMin,
+                        xMax = rect.xMax,
+                        yMin = switchBaseBottomY,
+                        yMax = switchBaseTopY
+                    });
+                    painter.Fill();
+                    painter.Stroke();
+                    painter.ClosePath();
+                    break;
+                case EStageObjectType.Wall:
+                    painter.BeginPath();
+                    painter.fillColor = Color.yellow;
+                    painter.strokeColor = Color.black;
+                    painter.MoveTo(CellToPixel(stageObject.Pos, y: 1));
+                    painter.LineTo(CellToPixel(stageObject.Pos, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 1));
+                    painter.LineTo(CellToPixel(stageObject.Pos, y: 1));
+                    painter.Fill();
+                    painter.Stroke();
+                    painter.ClosePath();
+                    break;
             }
         }
 
