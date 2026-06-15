@@ -120,7 +120,7 @@ namespace MaruSikaku.Editor.Custom
                     }
                     break;
                 case EStageEditMode.Ground:
-                    if (Data.TerrainDic.ContainsKey(pos) || Data.StageObjectDic.ContainsKey(pos)) { return; }
+                    if (HasAnyStageElement(pos)) { return; }
                     var ground = new StageTerrainCell(pos, ETerrainType.Ground);
                     Data.AddTerrainCell(ground);
                     break;
@@ -129,19 +129,26 @@ namespace MaruSikaku.Editor.Custom
                 case EStageEditMode.Movable:
                 case EStageEditMode.Switch:
                 case EStageEditMode.Wall:
-                    if (Data.TerrainDic.ContainsKey(pos) || Data.StageObjectDic.ContainsKey(pos)) { return; }
+                    if (HasAnyStageElement(pos)) { return; }
                     var stageObject = InstantiateStageObject(pos, EditContext.EditMode);
                     Data.AddStageObject(stageObject);
                     EditContext.SelectedCell = pos;
                     break;
                 case EStageEditMode.MaruStart:
-                    if (Data.TerrainDic.ContainsKey(pos) || Data.StageObjectDic.ContainsKey(pos)) { return; }
+                    if (HasAnyStageElement(pos)) { return; }
                     Data.MaruStart = pos;
                     break;
                 case EStageEditMode.SikakuStart:
-                    if (Data.TerrainDic.ContainsKey(pos) || Data.StageObjectDic.ContainsKey(pos)) { return; }
+                    if (HasAnyStageElement(pos)) { return; }
                     Data.SikakuStart = pos;
                     break;
+            }
+
+            bool HasAnyStageElement(Vector2Int pos)
+            {
+                return  Data.TerrainDic.ContainsKey(pos) || 
+                        Data.StageObjectDic.ContainsKey(pos) ||
+                        pos == Data.MaruStart || pos == Data.SikakuStart;
             }
 
             StageObject InstantiateStageObject(Vector2Int pos, EStageEditMode mode)
