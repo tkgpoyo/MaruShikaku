@@ -50,11 +50,11 @@ namespace MaruSikaku.Editor
         void CreateGUI()
         {
             _gridView = new();
-            _gridView.Data = _dataSource.StageData;
+            _gridView.StageData = _dataSource.StageData;
             _gridView.EditContext = _dataSource.EditContext;
 
             _propertyView = new();
-            _propertyView.Data = _dataSource.StageData;
+            _propertyView.StageData = _dataSource.StageData;
             _propertyView.EditContext = _dataSource.EditContext;
 
             // UXML, USSをロード
@@ -168,8 +168,8 @@ namespace MaruSikaku.Editor
             switch (e.propertyName)
             {
                 case nameof(StageDesignDataSource.StageData):
-                    _gridView.Data = _dataSource.StageData;
-                    _propertyView.Data = _dataSource.StageData;
+                    _gridView.StageData = _dataSource.StageData;
+                    _propertyView.StageData = _dataSource.StageData;
                     break;
                 case nameof(StageDesignDataSource.EditContext):
                     _gridView.EditContext = _dataSource.EditContext; 

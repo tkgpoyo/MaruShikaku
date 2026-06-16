@@ -19,13 +19,14 @@ namespace MaruSikaku.Editor.Data
 
         public static StageDisplayData FromStageSaveData(StageSaveData saveData)
         {
-            return new StageDisplayData() {
+            var data = new StageDisplayData() {
                 MaruStart = saveData.MaruInitPos,
                 SikakuStart = saveData.SikakuInitPos,
                 Size = saveData.Size,
-                TerrainCells = new(saveData.TerrainCells.Select(terrain => FromTerrainSaveData(terrain))),
-                StageObjects = new(saveData.StageObjects.Select(stageObject => FromObjectSaveData(stageObject)))
             };
+            data.SetTerrainCells(saveData.TerrainCells.Select(terrain => FromTerrainSaveData(terrain)));
+            data.SetStageObjects(saveData.StageObjects.Select(stageObject => FromObjectSaveData(stageObject)));
+            return data;
         }
 
         private static StageTerrainSaveData ToTerrainSaveData(StageTerrainCell terrainCell)

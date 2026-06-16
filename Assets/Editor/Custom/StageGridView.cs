@@ -35,28 +35,28 @@ namespace MaruSikaku.Editor.Custom
             generateVisualContent += OnGenerateVisualContent;
         }
 
-        public StageDisplayData Data
+        public StageDisplayData StageData
         {
-            get => _data;
+            get => _stageData;
             set
             {
-                if (_data == value) { return; }
-                if (_data != null)
+                if (_stageData == value) { return; }
+                if (_stageData != null)
                 {
-                    _data.propertyChanged -= OnStageDataChanged;
+                    _stageData.propertyChanged -= OnStageDataChanged;
                 }
-                _data = value;
-                if (_data != null)
+                _stageData = value;
+                if (_stageData != null)
                 {
-                    _data.propertyChanged += OnStageDataChanged;
+                    _stageData.propertyChanged += OnStageDataChanged;
 
-                    _nextId = _data.StageObjects.Count <= 0 ? 0 : _data.StageObjects.Max(stageObject => stageObject.Id + 1);
+                    _nextId = _stageData.StageObjects.Count <= 0 ? 0 : _stageData.StageObjects.Max(stageObject => stageObject.Id + 1);
                 }
 
                 MarkDirtyRepaint();
             }
         }
-        private StageDisplayData _data = new();
+        private StageDisplayData _stageData = new();
         
         public StageEditContext EditContext
         {
@@ -81,13 +81,6 @@ namespace MaruSikaku.Editor.Custom
 
         private void OnStageDataChanged(object sender, BindablePropertyChangedEventArgs e)
         {
-            switch (e.propertyName) {
-                case nameof(StageDisplayData.SizeX):
-                case nameof(StageDisplayData.SizeY):
-                    UpdateView();
-                    break;
-            }
-
             MarkDirtyRepaint();
         }
 
@@ -110,45 +103,38 @@ namespace MaruSikaku.Editor.Custom
                     EditContext.SelectedCell = pos;
                     break;
                 case EStageEditMode.Erase:
-                    if (Data.TerrainDic.ContainsKey(pos))
+                    if (StageData.TryGetTerrainCell(pos, out var removeTerrain))
                     {
-                        Data.RemoveTerrainCell(Data.TerrainDic[pos]);
+                        StageData.RemoveTerrainCell(removeTerrain);
                     }
-                    if (Data.StageObjectDic.ContainsKey(pos))
+                    if (StageData.TryGetStageObject(pos, out var removeObject))
                     {
-                        Data.RemoveStageObject(Data.StageObjectDic[pos]);
+                        StageData.RemoveStageObject(removeObject);
                     }
                     break;
                 case EStageEditMode.Ground:
-                    if (HasAnyStageElement(pos)) { return; }
-                    var ground = new StageTerrainCell(pos, ETerrainType.Ground);
-                    Data.AddTerrainCell(ground);
+                    if (StageData.HasAnyStageElement(pos)) { return; }
+                    StageData.AddTerrainCell(new StageTerrainCell(pos, ETerrainType.Ground));
                     break;
                 case EStageEditMode.Spring:
                 case EStageEditMode.Fragile:
                 case EStageEditMode.Movable:
                 case EStageEditMode.Switch:
                 case EStageEditMode.Wall:
-                    if (HasAnyStageElement(pos)) { return; }
-                    var stageObject = InstantiateStageObject(pos, EditContext.EditMode);
-                    Data.AddStageObject(stageObject);
+                    if (StageData.HasAnyStageElement(pos)) { return; }
+                    StageData.AddStageObject(InstantiateStageObject(pos, EditContext.EditMode));
                     EditContext.SelectedCell = pos;
                     break;
                 case EStageEditMode.MaruStart:
-                    if (HasAnyStageElement(pos)) { return; }
-                    Data.MaruStart = pos;
+                    if (StageData.HasAnyStageElement(pos)) { return; }
+                    StageData.MaruStart = pos;
+                    EditContext.SelectedCell = pos;
                     break;
                 case EStageEditMode.SikakuStart:
-                    if (HasAnyStageElement(pos)) { return; }
-                    Data.SikakuStart = pos;
+                    if (StageData.HasAnyStageElement(pos)) { return; }
+                    StageData.SikakuStart = pos;
+                    EditContext.SelectedCell = pos;
                     break;
-            }
-
-            bool HasAnyStageElement(Vector2Int pos)
-            {
-                return  Data.TerrainDic.ContainsKey(pos) || 
-                        Data.StageObjectDic.ContainsKey(pos) ||
-                        pos == Data.MaruStart || pos == Data.SikakuStart;
             }
 
             StageObject InstantiateStageObject(Vector2Int pos, EStageEditMode mode)
@@ -263,6 +249,7 @@ namespace MaruSikaku.Editor.Custom
         {
             var painter = context.painter2D;
 
+            UpdateView();
             DrawBackground(painter);
             DrawGrid(painter);
             DrawHoverCell(painter);
@@ -274,8 +261,8 @@ namespace MaruSikaku.Editor.Custom
 
         private void UpdateView()
         {
-            style.width = Data.SizeX * _cellPixel;
-            style.height = Data.SizeY * _cellPixel;
+            style.width = StageData.SizeX * _cellPixel;
+            style.height = StageData.SizeY * _cellPixel;
         }
 
         private void DrawBackground(Painter2D painter) 
@@ -298,12 +285,12 @@ namespace MaruSikaku.Editor.Custom
             painter.Rect(contentRect);              // Gridの外枠をなぞる
 
             // Gridを描画
-            for (int x = 1; x < Data.SizeX; x++) {
+            for (int x = 1; x < StageData.SizeX; x++) {
                 var px = x * _cellPixel;
                 painter.MoveTo(new(px, contentRect.yMin));
                 painter.LineTo(new(px, contentRect.yMax));
             }
-            for (int y = 1; y < Data.SizeY; y++) {
+            for (int y = 1; y < StageData.SizeY; y++) {
                 var py = y * _cellPixel;
                 painter.MoveTo(new(contentRect.xMin, py));
                 painter.LineTo(new(contentRect.xMax, py));
@@ -327,7 +314,7 @@ namespace MaruSikaku.Editor.Custom
 
         private void DrawTerrainCells(Painter2D painter)
         {
-            foreach (var terrainCell in Data.TerrainCells)
+            foreach (var terrainCell in StageData.TerrainCells)
             {
                 if (!IsInsideStage(terrainCell.Pos)) { continue; }
                 DrawTerrainCell(painter, terrainCell);
@@ -350,7 +337,7 @@ namespace MaruSikaku.Editor.Custom
 
         private void DrawStageObjects(Painter2D painter)
         {
-            foreach (var stageObject in Data.StageObjects)
+            foreach (var stageObject in StageData.StageObjects)
             {
                 if (!IsInsideStage(stageObject.Pos)) { continue; }
                 DrawStageObject(painter, stageObject);
@@ -509,28 +496,28 @@ namespace MaruSikaku.Editor.Custom
 
         private void DrawPlayerStartPos(Painter2D painter)
         {
-            if (IsInsideStage(Data.MaruStart))
+            if (IsInsideStage(StageData.MaruStart))
             {
                 painter.fillColor = Color.red;
                 painter.strokeColor = Color.black;
                 painter.lineWidth = 1f;
                 painter.BeginPath();
-                painter.Arc(CellToPixel(Data.MaruStart, x: 0.5f, y: 0.5f), _cellPixel * 0.4f, new Angle(0f), new Angle(360f));
+                painter.Arc(CellToPixel(StageData.MaruStart, x: 0.5f, y: 0.5f), _cellPixel * 0.4f, new Angle(0f), new Angle(360f));
                 painter.Fill();
                 painter.Stroke();
                 painter.ClosePath();
             }
-            if (IsInsideStage(Data.SikakuStart))
+            if (IsInsideStage(StageData.SikakuStart))
             {
                 painter.fillColor = Color.blue;
                 painter.strokeColor = Color.black;
                 painter.lineWidth = 1f;
                 painter.BeginPath();
-                painter.MoveTo(CellToPixel(Data.SikakuStart, x: 0.1f, y: 0.1f));
-                painter.LineTo(CellToPixel(Data.SikakuStart, x: 0.9f, y: 0.1f));
-                painter.LineTo(CellToPixel(Data.SikakuStart, x: 0.9f, y: 0.9f));
-                painter.LineTo(CellToPixel(Data.SikakuStart, x: 0.1f, y: 0.9f));
-                painter.LineTo(CellToPixel(Data.SikakuStart, x: 0.1f, y: 0.1f));
+                painter.MoveTo(CellToPixel(StageData.SikakuStart, x: 0.1f, y: 0.1f));
+                painter.LineTo(CellToPixel(StageData.SikakuStart, x: 0.9f, y: 0.1f));
+                painter.LineTo(CellToPixel(StageData.SikakuStart, x: 0.9f, y: 0.9f));
+                painter.LineTo(CellToPixel(StageData.SikakuStart, x: 0.1f, y: 0.9f));
+                painter.LineTo(CellToPixel(StageData.SikakuStart, x: 0.1f, y: 0.1f));
                 painter.Fill();
                 painter.Stroke();
                 painter.ClosePath();
@@ -540,7 +527,7 @@ namespace MaruSikaku.Editor.Custom
         private Vector2Int PointerToCell(Vector2 position)
         {
             var x = Mathf.FloorToInt(position.x / _cellPixel);
-            var y = Data.SizeY - Mathf.CeilToInt(position.y / _cellPixel);
+            var y = StageData.SizeY - Mathf.CeilToInt(position.y / _cellPixel);
             return new(x, y);
         }
 
@@ -550,9 +537,9 @@ namespace MaruSikaku.Editor.Custom
         /// <param name="cell">セル</param>
         private bool IsInsideStage(Vector2Int cell)
         {
-            return Data != null &&
-                0 <= cell.x && cell.x < Data.SizeX && 
-                0 <= cell.y && cell.y < Data.SizeY;
+            return StageData != null &&
+                0 <= cell.x && cell.x < StageData.SizeX && 
+                0 <= cell.y && cell.y < StageData.SizeY;
         }
         /// <summary>
         /// セルから長方形へと変換します．
@@ -565,8 +552,8 @@ namespace MaruSikaku.Editor.Custom
             {
                 xMin = cellPos.x * _cellPixel,
                 xMax = (cellPos.x + 1) * _cellPixel,
-                yMin = (Data.SizeY - (cellPos.y + 1)) * _cellPixel,
-                yMax = (Data.SizeY - cellPos.y) * _cellPixel
+                yMin = (StageData.SizeY - (cellPos.y + 1)) * _cellPixel,
+                yMax = (StageData.SizeY - cellPos.y) * _cellPixel
             };
         }
 
@@ -582,7 +569,7 @@ namespace MaruSikaku.Editor.Custom
             x = Mathf.Clamp(x, 0, 1);
             y = Mathf.Clamp(y, 0, 1);
 
-            return new ((cell.x + x) * _cellPixel, (Data.SizeY - (cell.y + y)) * _cellPixel);
+            return new ((cell.x + x) * _cellPixel, (StageData.SizeY - (cell.y + y)) * _cellPixel);
         }
 
         /// <summary>

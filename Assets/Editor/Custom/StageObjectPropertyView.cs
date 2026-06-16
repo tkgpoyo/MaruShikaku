@@ -17,17 +17,17 @@ namespace MaruSikaku.Editor.Custom
             Rebuild();
         }
 
-        public StageDisplayData Data
+        public StageDisplayData StageData
         {
-            get => _data;
+            get => _stageData;
             set
             {
-                if (_data == value) { return; }
-                _data = value;
+                if (_stageData == value) { return; }
+                _stageData = value;
                 Rebuild();
             }
         }
-        private StageDisplayData _data = new();
+        private StageDisplayData _stageData = new();
 
         public StageEditContext EditContext
         {
@@ -54,7 +54,7 @@ namespace MaruSikaku.Editor.Custom
             Clear();        // 子要素を全削除
             UnbindCurrentObject();
 
-            if (Data == null || EditContext == null)
+            if (StageData == null || EditContext == null)
             {
                 Add(new Label("No data"));
                 return;
@@ -68,7 +68,7 @@ namespace MaruSikaku.Editor.Custom
 
             var selectedCell = (Vector2Int)EditContext.SelectedCell;
 
-            if (!Data.StageObjectDic.TryGetValue(selectedCell, out var selectedObject))
+            if (!StageData.TryGetStageObject(selectedCell, out var selectedObject))
             {
                 Add(new Label("No object selected"));
                 return;
@@ -90,12 +90,18 @@ namespace MaruSikaku.Editor.Custom
 
             var posXField = new IntegerField("Pos X");
             posXField.SetValueWithoutNotify(stageObject.Pos.x);
-            posXField.SetEnabled(false);
+            posXField.RegisterValueChangedCallback(e =>
+            {
+                stageObject.Pos = ClampPos(new (e.newValue, stageObject.Pos.y));
+            });
             Add(posXField);
 
             var posYField = new IntegerField("Pos Y");
             posYField.SetValueWithoutNotify(stageObject.Pos.y);
-            posYField.SetEnabled(false);
+            posYField.RegisterValueChangedCallback(e =>
+            {
+                stageObject.Pos = ClampPos(new (stageObject.Pos.x, e.newValue));
+            });
             Add(posYField);
         }
 
@@ -118,6 +124,13 @@ namespace MaruSikaku.Editor.Custom
                 wall.SwitchId = evt.newValue;
             });
             Add(switchIdField);
+        }
+
+        private Vector2Int ClampPos(Vector2Int pos)
+        {
+            var x = Mathf.Clamp(pos.x, 0, StageData.SizeX - 1);
+            var y = Mathf.Clamp(pos.y, 0, StageData.SizeY - 1);
+            return new (x, y);
         }
 
         private void UnbindCurrentObject()

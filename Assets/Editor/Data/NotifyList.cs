@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 
 namespace MaruSikaku.Editor.Data
 {
-    public class NotifyList<T> : IList<T>, INotifyBindablePropertyChanged
+    public class NotifyList<T> : IList<T>, IReadOnlyList<T>, INotifyBindablePropertyChanged
     {
         public event EventHandler<BindablePropertyChangedEventArgs> propertyChanged;
 
