@@ -12,6 +12,8 @@ namespace MaruSikaku.Editor.Data
                 displayData.Size,
                 displayData.MaruStart,
                 displayData.SikakuStart,
+                displayData.MaruGoal,
+                displayData.SikakuGoal,
                 displayData.TerrainCells.Select(terrain => ToTerrainSaveData(terrain)).ToList(),
                 displayData.StageObjects.Select(stageObject => ToObjectSaveData(stageObject)).ToList()
             );
@@ -22,6 +24,8 @@ namespace MaruSikaku.Editor.Data
             var data = new StageDisplayData() {
                 MaruStart = saveData.MaruInitPos,
                 SikakuStart = saveData.SikakuInitPos,
+                MaruGoal = saveData.MaruGoalPos,
+                SikakuGoal = saveData.SikakuGoalPos,
                 Size = saveData.Size,
             };
             data.SetTerrainCells(saveData.TerrainCells.Select(terrain => FromTerrainSaveData(terrain)));
