@@ -1,7 +1,7 @@
 using MaruSikaku.Editor.Data;
 using MaruSikaku.Stage;
-using UnityEditor;
-using UnityEditor.UIElements;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -10,10 +10,14 @@ namespace MaruSikaku.Editor.Custom
     public class StageObjectPropertyView : VisualElement
     {
         private StageObject _currentObject;
+        private readonly List<Action> _fieldEventUnbinders = new();
+        private bool _isEditContextBound;
 
         public StageObjectPropertyView()
         {
             AddToClassList("stage-object-property-view");
+            RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+            RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
             Rebuild();
         }
 
@@ -35,15 +39,9 @@ namespace MaruSikaku.Editor.Custom
             set
             {
                 if (_editContext == value) { return; }
-                if (_editContext != null)
-                {
-                    _editContext.propertyChanged -= OnEditContextChanged;
-                }
+                UnbindEditContext();
                 _editContext = value;
-                if (_editContext != null)
-                {
-                    _editContext.propertyChanged += OnEditContextChanged;
-                }
+                BindEditContext();
                 Rebuild();
             }
         }
@@ -51,8 +49,8 @@ namespace MaruSikaku.Editor.Custom
 
         private void Rebuild()
         {
-            Clear();        // 子要素を全削除
             UnbindCurrentObject();
+            Clear();        // 子要素を全削除
 
             if (StageData == null || EditContext == null)
             {
@@ -90,18 +88,40 @@ namespace MaruSikaku.Editor.Custom
 
             var posXField = new IntegerField("Pos X");
             posXField.SetValueWithoutNotify(stageObject.Pos.x);
-            posXField.RegisterValueChangedCallback(e =>
+            posXField.isDelayed = true;
+            EventCallback<ChangeEvent<int>> onPosXChanged = e =>
             {
-                stageObject.Pos = ClampPos(new (e.newValue, stageObject.Pos.y));
-            });
+                var newPos = new Vector2Int(e.newValue, stageObject.Pos.y);
+                if (!StageData.IsInsideStage(newPos) || StageData.HasAnyStageElement(newPos))
+                {
+                    posXField.SetValueWithoutNotify(stageObject.Pos.x);
+                    return;
+                }
+
+                stageObject.MoveTo(newPos);
+                EditContext.SelectedCell = newPos;
+            };
+            posXField.RegisterValueChangedCallback(onPosXChanged);
+            _fieldEventUnbinders.Add(() => posXField.UnregisterValueChangedCallback(onPosXChanged));
             Add(posXField);
 
             var posYField = new IntegerField("Pos Y");
             posYField.SetValueWithoutNotify(stageObject.Pos.y);
-            posYField.RegisterValueChangedCallback(e =>
+            posYField.isDelayed = true;
+            EventCallback<ChangeEvent<int>> onPosYChanged = e =>
             {
-                stageObject.Pos = ClampPos(new (stageObject.Pos.x, e.newValue));
-            });
+                var newPos = new Vector2Int(stageObject.Pos.x, e.newValue);
+                if (!StageData.IsInsideStage(newPos) || StageData.HasAnyStageElement(newPos))
+                {
+                    posYField.SetValueWithoutNotify(stageObject.Pos.y);
+                    return;
+                }
+
+                stageObject.MoveTo(newPos);
+                EditContext.SelectedCell = newPos;
+            };
+            posYField.RegisterValueChangedCallback(onPosYChanged);
+            _fieldEventUnbinders.Add(() => posYField.UnregisterValueChangedCallback(onPosYChanged));
             Add(posYField);
         }
 
@@ -119,31 +139,57 @@ namespace MaruSikaku.Editor.Custom
         {
             var switchIdField = new IntegerField("Switch ID");
             switchIdField.SetValueWithoutNotify(wall.SwitchId);
-            switchIdField.RegisterValueChangedCallback(evt =>
+            switchIdField.isDelayed = true;
+            EventCallback<ChangeEvent<int>> onSwitchIdChanged = evt =>
             {
                 wall.SwitchId = evt.newValue;
-            });
+            };
+            switchIdField.RegisterValueChangedCallback(onSwitchIdChanged);
+            _fieldEventUnbinders.Add(() => switchIdField.UnregisterValueChangedCallback(onSwitchIdChanged));
             Add(switchIdField);
-        }
-
-        private Vector2Int ClampPos(Vector2Int pos)
-        {
-            var x = Mathf.Clamp(pos.x, 0, StageData.SizeX - 1);
-            var y = Mathf.Clamp(pos.y, 0, StageData.SizeY - 1);
-            return new (x, y);
         }
 
         private void UnbindCurrentObject()
         {
-            if (_currentObject == null) { return; }
+            foreach (var unbind in _fieldEventUnbinders)
+            {
+                unbind();
+            }
+            _fieldEventUnbinders.Clear();
             _currentObject = null;
+        }
+
+        private void BindEditContext()
+        {
+            if (_isEditContextBound || _editContext == null || panel == null) { return; }
+            _editContext.propertyChanged += OnEditContextChanged;
+            _isEditContextBound = true;
+        }
+
+        private void UnbindEditContext()
+        {
+            if (!_isEditContextBound || _editContext == null) { return; }
+            _editContext.propertyChanged -= OnEditContextChanged;
+            _isEditContextBound = false;
+        }
+
+        private void OnAttachToPanel(AttachToPanelEvent evt)
+        {
+            BindEditContext();
+            Rebuild();
+        }
+
+        private void OnDetachFromPanel(DetachFromPanelEvent evt)
+        {
+            UnbindEditContext();
+            UnbindCurrentObject();
         }
 
         private void OnEditContextChanged(object sender, BindablePropertyChangedEventArgs e)
         {
             switch (e.propertyName)
             {
-                case nameof(EditContext.SelectedCell):
+                case nameof(StageEditContext.SelectedCell):
                     Rebuild();
                     break;
             }

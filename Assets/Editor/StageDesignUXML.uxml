@@ -105,12 +105,12 @@
                     <ui:Label text="Maru" class="property-label"/>
                     <ui:IntegerField label="" value="0" name="maruStartXField" is-delayed="true" class="coordinate-field">
                         <Bindings>
-                            <ui:DataBinding property="value" data-source-path="MaruStartX" binding-mode="TwoWay"/>
+                            <ui:DataBinding property="value" data-source-path="MaruGoalX" binding-mode="TwoWay"/>
                         </Bindings>
                     </ui:IntegerField>
                     <ui:IntegerField label="" value="0" name="maruStartYField" is-delayed="true" class="coordinate-field">
                         <Bindings>
-                            <ui:DataBinding property="value" data-source-path="MaruStartY" binding-mode="TwoWay"/>
+                            <ui:DataBinding property="value" data-source-path="MaruGoalY" binding-mode="TwoWay"/>
                         </Bindings>
                     </ui:IntegerField>
                 </ui:VisualElement>
@@ -118,12 +118,12 @@
                     <ui:Label text="Sikaku" class="property-label"/>
                     <ui:IntegerField label="" value="0" name="sikakuStartXField" is-delayed="true" class="coordinate-field">
                         <Bindings>
-                            <ui:DataBinding property="value" data-source-path="SikakuStartX" binding-mode="TwoWay"/>
+                            <ui:DataBinding property="value" data-source-path="SikakuGoalX" binding-mode="TwoWay"/>
                         </Bindings>
                     </ui:IntegerField>
                     <ui:IntegerField label="" value="0" name="sikakuStartYField" is-delayed="true" class="coordinate-field">
                         <Bindings>
-                            <ui:DataBinding property="value" data-source-path="SikakuStartY" binding-mode="TwoWay"/>
+                            <ui:DataBinding property="value" data-source-path="SikakuGoalY" binding-mode="TwoWay"/>
                         </Bindings>
                     </ui:IntegerField>
                 </ui:VisualElement>

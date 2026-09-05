@@ -56,16 +56,44 @@ namespace MaruSikaku.Editor.Data
         /// <summary>四角キャラクターの初期位置</summary>
         public Vector2Int SikakuStart
         {
-            get => _SikakuStart;
+            get => _sikakuStart;
             set
             {
-                if (_SikakuStart == value) { return; }
-                _SikakuStart = value;
+                if (_sikakuStart == value) { return; }
+                _sikakuStart = value;
                 Notify(nameof(SikakuStartX));
                 Notify(nameof(SikakuStartY));
             }
         }
-        private Vector2Int _SikakuStart = new (1, 0);
+        private Vector2Int _sikakuStart = new (1, 0);
+
+        /// <summary>丸キャラクターの初期位置</summary>
+        public Vector2Int MaruGoal
+        {
+            get => _maruGoal;
+            set
+            {
+                if (_maruGoal == value) { return; }
+                _maruGoal = value;
+                Notify(nameof(MaruGoalX));
+                Notify(nameof(MaruGoalY));
+            }
+        }
+        private Vector2Int _maruGoal = new (8, 0);
+
+        /// <summary>四角キャラクターの初期位置</summary>
+        public Vector2Int SikakuGoal
+        {
+            get => _sikakuGoal;
+            set
+            {
+                if (_sikakuGoal == value) { return; }
+                _sikakuGoal = value;
+                Notify(nameof(SikakuGoalX));
+                Notify(nameof(SikakuGoalY));
+            }
+        }
+        private Vector2Int _sikakuGoal = new (9, 0);
 
         /// <summary>ステージのサイズ</summary>
         public Vector2Int Size
@@ -82,9 +110,9 @@ namespace MaruSikaku.Editor.Data
         private Vector2Int _size = new (10, 10);
 
         /// <summary>地形タイルのリスト</summary>
-        public IReadOnlyList<StageTerrainCell> TerrainCells => (IReadOnlyList<StageTerrainCell>)_terrainCells;
+        public IReadOnlyList<StageTerrainCell> TerrainCells => _terrainCells;
         /// <summary>ステージオブジェクトのリスト</summary>
-        public IReadOnlyList<StageObject> StageObjects => (IReadOnlyList<StageObject>)_stageObjects;
+        public IReadOnlyList<StageObject> StageObjects => _stageObjects;
         #endregion プロパティ
 
         #region 画面表示用プロパティ
@@ -119,12 +147,12 @@ namespace MaruSikaku.Editor.Data
         [CreateProperty]
         public int SikakuStartX
         {
-            get => _SikakuStart.x;
+            get => _sikakuStart.x;
             set
             {
                 value = Mathf.Clamp(value, 0, SizeX);
-                if (_SikakuStart.x == value) { return; }
-                _SikakuStart.x = value;
+                if (_sikakuStart.x == value) { return; }
+                _sikakuStart.x = value;
                 Notify();
             }
         }
@@ -132,12 +160,68 @@ namespace MaruSikaku.Editor.Data
         [CreateProperty]
         public int SikakuStartY
         {
-            get => _SikakuStart.y;
+            get => _sikakuStart.y;
             set
             {
                 value = Mathf.Clamp(value, 0, SizeY);
-                if (_SikakuStart.y == value) { return; }
-                _SikakuStart.y = value;
+                if (_sikakuStart.y == value) { return; }
+                _sikakuStart.y = value;
+                Notify();
+            }
+        }
+
+        /// <summary>丸キャラクターのゴール位置のX座標</summary>
+        [CreateProperty]
+        public int MaruGoalX
+        {
+            get => _maruGoal.x;
+            set
+            {
+                value = Mathf.Clamp(value, 0, SizeX);
+                if (_maruGoal.x == value) { return; }
+                _maruGoal.x = value;
+                Notify();
+            }
+        }
+
+        /// <summary>丸キャラクターのゴール位置のY座標</summary>
+        [CreateProperty]
+        public int MaruGoalY
+        {
+            get => _maruGoal.y;
+            set
+            {
+                value = Mathf.Clamp(value, 0, SizeY);
+                if (_maruGoal.y == value) { return; }
+                _maruGoal.y = value;
+                Notify();
+            }
+        }
+
+        /// <summary>四角キャラクターのゴール位置のX座標</summary>
+        [CreateProperty]
+        public int SikakuGoalX
+        {
+            get => _sikakuGoal.x;
+            set
+            {
+                value = Mathf.Clamp(value, 0, SizeX);
+                if (_sikakuGoal.x == value) { return; }
+                _sikakuGoal.x = value;
+                Notify();
+            }
+        }
+
+        /// <summary>四角キャラクターのゴール位置のY座標</summary>
+        [CreateProperty]
+        public int SikakuGoalY
+        {
+            get => _sikakuGoal.y;
+            set
+            {
+                value = Mathf.Clamp(value, 0, SizeY);
+                if (_sikakuGoal.y == value) { return; }
+                _sikakuGoal.y = value;
                 Notify();
             }
         }
@@ -180,6 +264,10 @@ namespace MaruSikaku.Editor.Data
 
         private void OnStageObjectsChanged(object sender, BindablePropertyChangedEventArgs e)
         {
+            if (e.propertyName == $"Item.{nameof(StageObject.Pos)}")
+            {
+                var prevKeyValuePair = _stageObjectDic.FirstOrDefault(d => d.Value == sender);
+            }
             Notify(nameof(StageObjects));
         }
         #endregion イベント
@@ -254,6 +342,11 @@ namespace MaruSikaku.Editor.Data
             _stageObjectDic = _stageObjects.ToDictionary(stageObject => stageObject.Pos);
 
             Notify(nameof(StageObjects));
+        }
+
+        public bool IsInsideStage(Vector2Int pos)
+        {
+            return  0 <= pos.x && pos.x < SizeX && 0 <= pos.y && pos.y < SizeY;
         }
         #endregion メソッド
 

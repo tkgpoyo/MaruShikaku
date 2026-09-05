@@ -100,7 +100,6 @@ namespace MaruSikaku.Editor.Custom
             switch (mode)
             {
                 case EStageEditMode.Select:
-                    EditContext.SelectedCell = pos;
                     break;
                 case EStageEditMode.Erase:
                     if (StageData.TryGetTerrainCell(pos, out var removeTerrain))
@@ -113,7 +112,7 @@ namespace MaruSikaku.Editor.Custom
                     }
                     break;
                 case EStageEditMode.Ground:
-                    if (StageData.HasAnyStageElement(pos)) { return; }
+                    if (StageData.HasAnyStageElement(pos)) { break; }
                     StageData.AddTerrainCell(new StageTerrainCell(pos, ETerrainType.Ground));
                     break;
                 case EStageEditMode.Spring:
@@ -121,21 +120,21 @@ namespace MaruSikaku.Editor.Custom
                 case EStageEditMode.Movable:
                 case EStageEditMode.Switch:
                 case EStageEditMode.Wall:
-                    if (StageData.HasAnyStageElement(pos)) { return; }
+                    if (StageData.HasAnyStageElement(pos)) { break; }
                     StageData.AddStageObject(InstantiateStageObject(pos, EditContext.EditMode));
-                    EditContext.SelectedCell = pos;
                     break;
                 case EStageEditMode.MaruStart:
-                    if (StageData.HasAnyStageElement(pos)) { return; }
+                    if (StageData.HasAnyStageElement(pos)) { break; }
                     StageData.MaruStart = pos;
-                    EditContext.SelectedCell = pos;
                     break;
                 case EStageEditMode.SikakuStart:
-                    if (StageData.HasAnyStageElement(pos)) { return; }
+                    if (StageData.HasAnyStageElement(pos)) { break; }
                     StageData.SikakuStart = pos;
-                    EditContext.SelectedCell = pos;
                     break;
             }
+
+            //↓オブジェクト配置後に選択中セルを変更しないと，オブジェクトプロパティビューがうまく更新されない
+            EditContext.SelectedCell = pos;         // いずれのモードにおいても，クリックしたセルを選択状態にする
 
             StageObject InstantiateStageObject(Vector2Int pos, EStageEditMode mode)
             {
@@ -156,7 +155,7 @@ namespace MaruSikaku.Editor.Custom
         /// </summary>
         /// <param name="mode">編集モード</param>
         /// <returns>ドラッグ編集可能かどうか</returns>
-        private bool CanDragPaint(EStageEditMode mode) => mode is not EStageEditMode.Switch and not EStageEditMode.Wall and not EStageEditMode.Spring;
+        private bool CanDragPaint(EStageEditMode mode) => mode is EStageEditMode.Erase or EStageEditMode.Ground or EStageEditMode.Fragile;
 
         /// <summary>
         /// 左クリックされているかどうかを判定します．
@@ -171,7 +170,7 @@ namespace MaruSikaku.Editor.Custom
             e.StopPropagation();
 
             var cell = PointerToCell(e.localPosition);
-            if (!IsInsideStage(cell)) { return; }
+            if (!StageData.IsInsideStage(cell)) { return; }
 
             _lastPaintedCell = cell;
 
@@ -185,7 +184,7 @@ namespace MaruSikaku.Editor.Custom
             e.StopPropagation();
 
             var cell = PointerToCell(e.localPosition);
-            if (!IsInsideStage(cell)) {                         // ステージ外にマウスがある場合
+            if (!StageData.IsInsideStage(cell)) {       // ステージ外にマウスがある場合
                 EditContext.HoverCell = null;
                 return;
             }
@@ -239,7 +238,7 @@ namespace MaruSikaku.Editor.Custom
 
             var cell = PointerToCell(e.localPosition);
 
-            if (IsInsideStage(cell))
+            if (StageData.IsInsideStage(cell))
             {
                 EditContext.HoverCell = cell;
             }
@@ -257,6 +256,7 @@ namespace MaruSikaku.Editor.Custom
             DrawStageObjects(painter);
             DrawSelectedCell(painter);
             DrawPlayerStartPos(painter);
+            DrawPlayerGoalPos(painter);
         }
 
         private void UpdateView()
@@ -316,7 +316,7 @@ namespace MaruSikaku.Editor.Custom
         {
             foreach (var terrainCell in StageData.TerrainCells)
             {
-                if (!IsInsideStage(terrainCell.Pos)) { continue; }
+                if (!StageData.IsInsideStage(terrainCell.Pos)) { continue; }
                 DrawTerrainCell(painter, terrainCell);
             }
 
@@ -339,7 +339,7 @@ namespace MaruSikaku.Editor.Custom
         {
             foreach (var stageObject in StageData.StageObjects)
             {
-                if (!IsInsideStage(stageObject.Pos)) { continue; }
+                if (!StageData.IsInsideStage(stageObject.Pos)) { continue; }
                 DrawStageObject(painter, stageObject);
             }
 
@@ -491,12 +491,11 @@ namespace MaruSikaku.Editor.Custom
 
                 painter.Stroke();
             }
-            
         }
 
         private void DrawPlayerStartPos(Painter2D painter)
         {
-            if (IsInsideStage(StageData.MaruStart))
+            if (StageData.IsInsideStage(StageData.MaruStart))
             {
                 painter.fillColor = Color.red;
                 painter.strokeColor = Color.black;
@@ -507,7 +506,7 @@ namespace MaruSikaku.Editor.Custom
                 painter.Stroke();
                 painter.ClosePath();
             }
-            if (IsInsideStage(StageData.SikakuStart))
+            if (StageData.IsInsideStage(StageData.SikakuStart))
             {
                 painter.fillColor = Color.blue;
                 painter.strokeColor = Color.black;
@@ -524,6 +523,50 @@ namespace MaruSikaku.Editor.Custom
             }
         }
 
+        private void DrawPlayerGoalPos(Painter2D painter)
+        {
+            if (StageData.IsInsideStage(StageData.MaruGoal))
+            {
+                painter.BeginPath();
+                painter.fillColor = Color.red;
+                painter.strokeColor = Color.black;
+                painter.Rect(CellToRect(StageData.MaruGoal));
+                painter.Fill();
+                painter.Stroke();
+                painter.ClosePath();
+
+                painter.BeginPath();
+                painter.strokeColor = Color.black;
+                painter.lineWidth = 2;
+                painter.Arc(CellToPixel(StageData.MaruGoal, x: 0.5f, y: 0.5f), _cellPixel * 0.3f, new Angle(30), new Angle(330));
+                painter.MoveTo(CellToPixel(StageData.MaruGoal, x: 0.5f, y: 0.5f));
+                painter.LineTo(CellToPixel(StageData.MaruGoal, x: 0.746f, y: 0.5f));
+                painter.LineTo(CellToPixel(StageData.MaruGoal, x: 0.746f, y: 0.2f));
+                painter.Stroke();
+                painter.ClosePath();
+            }
+            if (StageData.IsInsideStage(StageData.SikakuGoal))
+            {
+                painter.BeginPath();
+                painter.fillColor = Color.blue;
+                painter.strokeColor = Color.black;
+                painter.Rect(CellToRect(StageData.SikakuGoal));
+                painter.Fill();
+                painter.Stroke();
+                painter.ClosePath();
+
+                painter.BeginPath();
+                painter.strokeColor = Color.black;
+                painter.lineWidth = 2;
+                painter.Arc(CellToPixel(StageData.SikakuGoal, x: 0.5f, y: 0.5f), _cellPixel * 0.3f, new Angle(30), new Angle(330));
+                painter.MoveTo(CellToPixel(StageData.SikakuGoal, x: 0.5f, y: 0.5f));
+                painter.LineTo(CellToPixel(StageData.SikakuGoal, x: 0.746f, y: 0.5f));
+                painter.LineTo(CellToPixel(StageData.SikakuGoal, x: 0.746f, y: 0.2f));
+                painter.Stroke();
+                painter.ClosePath();
+            }
+        }
+
         private Vector2Int PointerToCell(Vector2 position)
         {
             var x = Mathf.FloorToInt(position.x / _cellPixel);
@@ -531,16 +574,6 @@ namespace MaruSikaku.Editor.Custom
             return new(x, y);
         }
 
-        /// <summary>
-        /// セルがステージの中にあるかどうかを返します．
-        /// </summary>
-        /// <param name="cell">セル</param>
-        private bool IsInsideStage(Vector2Int cell)
-        {
-            return StageData != null &&
-                0 <= cell.x && cell.x < StageData.SizeX && 
-                0 <= cell.y && cell.y < StageData.SizeY;
-        }
         /// <summary>
         /// セルから長方形へと変換します．
         /// </summary>

@@ -37,7 +37,7 @@ namespace MaruSikaku.Stage
         public Vector2Int Pos
         {
             get => _pos;
-            set
+            private set
             {
                 if (_pos == value) { return; }
                 _pos = value;
@@ -50,7 +50,7 @@ namespace MaruSikaku.Stage
         public bool IsDeleted
         {
             get => _isDeleted;
-            set
+            private set
             {
                 if (_isDeleted == value) { return; }
                 _isDeleted = value;
@@ -66,6 +66,11 @@ namespace MaruSikaku.Stage
             Id = id;
             Pos = pos;
             IsDeleted = isDeleted;
+        }
+
+        public void MoveTo(Vector2Int pos)
+        {
+            Pos = pos;
         }
 
         /// <summary>
