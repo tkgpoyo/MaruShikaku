@@ -171,7 +171,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &220520476
 Transform:
   m_ObjectHideFlags: 0
@@ -1107,17 +1107,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2484191867671959752, guid: 236bc95b3c7f54821b7408e54a024018, type: 3}
   m_PrefabInstance: {fileID: 6077001105987586634}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &859617593 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4707541633359886933, guid: 236bc95b3c7f54821b7408e54a024018, type: 3}
-  m_PrefabInstance: {fileID: 6077001105987586634}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: deadf8f13dc9b44068b9d05172ec90eb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
 --- !u!1 &886638877
 GameObject:
   m_ObjectHideFlags: 0
@@ -1162,9 +1151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d127ea81822841a9a348b0e2c414984, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameController
-  _players:
-  - {fileID: 1736119096}
-  - {fileID: 859617593}
+  _loader: {fileID: 1634724979}
   _handler: {fileID: 1275877380}
   _camera: {fileID: 519420033}
 --- !u!4 &896217621 stripped
@@ -1352,12 +1339,12 @@ GameObject:
   m_Component:
   - component: {fileID: 1078795434}
   m_Layer: 0
-  m_Name: Stage
+  m_Name: _Stage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1078795434
 Transform:
   m_ObjectHideFlags: 0
@@ -1761,6 +1748,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 742726039}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1634724978
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1634724980}
+  - component: {fileID: 1634724979}
+  m_Layer: 0
+  m_Name: Stage Loader
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1634724979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1634724978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7542e2ca3875943e9a14a170c1017a5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.StageLoader
+  _groundTile: {fileID: 11400000, guid: b7f92d3e9404c4bc199e2d3f42254db3, type: 2}
+  _maruPrefab: {fileID: 2525497049846473360, guid: 2fc2c83cb9ebc4988890c4acae616e81, type: 3}
+  _sikakuPrefab: {fileID: 6643612391698639779, guid: 236bc95b3c7f54821b7408e54a024018, type: 3}
+  _fragilePrefab: {fileID: 8232702291840533296, guid: fdc14851d2c424132be3ad884a25d05d, type: 3}
+  _pressablePrefab: {fileID: 4163336091461289921, guid: 274d8e91783504145b97599178fdc7eb, type: 3}
+  _switchPrefab: {fileID: 2843989903509339647, guid: dd4d7f1fd48614f14988bc106eac9cc5, type: 3}
+  _wallPrefab: {fileID: 7472633127795652423, guid: 6ed5dce3ab7bd4e4095b21410ac9a4a0, type: 3}
+  _springPrefab: {fileID: 2367988502742811817, guid: 4cb4bdae57f654e1c9b2475d9fd6bac6, type: 3}
+--- !u!4 &1634724980
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1634724978}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1646548322
 GameObject:
   m_ObjectHideFlags: 0
@@ -1776,7 +1815,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1646548323
 Transform:
   m_ObjectHideFlags: 0
@@ -1799,17 +1838,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2043021253000518480, guid: 2fc2c83cb9ebc4988890c4acae616e81, type: 3}
   m_PrefabInstance: {fileID: 5011961600661736943}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1736119096 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 9209500522086985584, guid: 2fc2c83cb9ebc4988890c4acae616e81, type: 3}
-  m_PrefabInstance: {fileID: 5011961600661736943}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: deadf8f13dc9b44068b9d05172ec90eb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
 --- !u!1 &1936897632
 GameObject:
   m_ObjectHideFlags: 0
@@ -2198,3 +2226,4 @@ SceneRoots:
   - {fileID: 1646548323}
   - {fileID: 1936897633}
   - {fileID: 220520476}
+  - {fileID: 1634724980}

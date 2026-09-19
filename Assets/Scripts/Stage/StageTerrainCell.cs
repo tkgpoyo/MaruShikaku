@@ -4,6 +4,7 @@ namespace MaruSikaku.Stage
 {
     public enum ETerrainType
     {
+        None,
         Ground
     }
     public class StageTerrainCell

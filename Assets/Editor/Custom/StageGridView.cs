@@ -614,29 +614,4 @@ namespace MaruSikaku.Editor.Custom
             return _nextId++;
         }
     }
-
-    /// <summary>
-    /// <see cref="Painter2D"/>の拡張メソッド用クラスです．
-    /// </summary>
-    public static class Painter2DExtension
-    {
-        /// <summary>
-        /// 長方形を描画します．
-        /// </summary>
-        /// <param name="painter"></param>
-        /// <param name="rect">長方形</param>
-        public static void Rect(this Painter2D painter, Rect rect)
-        {
-            var rectVertexes = new Vector2[4] { 
-                new (rect.xMin, rect.yMin),
-                new (rect.xMin, rect.yMax),
-                new (rect.xMax, rect.yMax),
-                new (rect.xMax, rect.yMin),
-            };                                      // 長方形の各頂点の座標
-            painter.MoveTo(rectVertexes.Last());    // 長方形の右上の頂点に移動
-            foreach (var v in rectVertexes) {
-                painter.LineTo(v);                  // 左上→左下→右下→右上 と移動していき，長方形を描画
-            }
-        }
-    }
 }
