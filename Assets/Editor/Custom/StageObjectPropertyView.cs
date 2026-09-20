@@ -9,7 +9,7 @@ namespace MaruSikaku.Editor.Custom
 {
     public class StageObjectPropertyView : VisualElement
     {
-        private StageObject _currentObject;
+        private StageObjectDisplayData _currentObject;
         private readonly List<Action> _fieldEventUnbinders = new();
         private bool _isEditContextBound;
 
@@ -77,7 +77,7 @@ namespace MaruSikaku.Editor.Custom
             BuildSpecificTypeFields(selectedObject);
         }
 
-        private void BuildCommonFields(StageObject stageObject)
+        private void BuildCommonFields(StageObjectDisplayData stageObject)
         {
             Add(new Label(stageObject.Type.ToString()));
 
@@ -125,7 +125,7 @@ namespace MaruSikaku.Editor.Custom
             Add(posYField);
         }
 
-        private void BuildSpecificTypeFields(StageObject stageObject)
+        private void BuildSpecificTypeFields(StageObjectDisplayData stageObject)
         {
             switch (stageObject.Type)
             {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using MaruSikaku.Gameplay.Players;
+using MaruSikaku.Gameplay.Stages.Gimmicks;
 using MaruSikaku.Stage;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -41,13 +42,13 @@ namespace MaruSikaku.Gameplay
 
         public void LoadStage(string jsonPath, out PlayerController[] players)
         {
-            if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))           // JSONファイルパスが存在しない場合
+            if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))       // JSONファイルパスが存在しない場合
             {
                 throw new ArgumentException($"指定されたステージファイルのJSONパスが存在しません({jsonPath})．");
             }
 
-            var json = File.ReadAllText(jsonPath);                                  // jsonテキストを取得
-            var stageSaveData = JsonUtility.FromJson<StageSaveData>(json);          // ステージ保存情報をロード
+            var json = File.ReadAllText(jsonPath);                              // jsonテキストを取得
+            var stageSaveData = JsonUtility.FromJson<StageSaveData>(json);      // ステージ保存情報をロード
             // ヒエラルキー構成を構築
             BuildHierarchy();
             // キャラクターを初期配置
@@ -57,14 +58,18 @@ namespace MaruSikaku.Gameplay
             {
                 maru.GetComponent<PlayerController>(),
                 sikaku.GetComponent<PlayerController>(),
-            };                                                                      // プレイヤー情報を取得
+            };                                                                                              // プレイヤー情報を取得
             // 地面を生成
             InstantiateGround(stageSaveData);
             // ステージオブジェクトを生成
+            var stageObjMap = new Dictionary<int, (EStageObjectType, StageObjectSaveData, GameObject)>();   // IDとGameObjectとの対応表
             foreach (var stageObj in stageSaveData.StageObjects)
             {
-                InstantiateStageObject(stageObj);
+                var gameObject = InstantiateStageObject(stageObj);                                          // ステージオブジェクトのGameObjectを取得
+                stageObjMap.Add(stageObj.Id, (stageObj.Type, stageObj, gameObject));                        // IDとGameObjectとの対応表に登録
             }
+            // ステージオブジェクト間の関係を設定
+            BuildStageObjectRelation(stageObjMap);
         }
 
         /// <summary>
@@ -93,6 +98,8 @@ namespace MaruSikaku.Gameplay
             _groundRoot.transform.parent = _gridRoot.transform;     // グリッドのオブジェクトの子オブジェクトとする
             _tilemap = _groundRoot.AddComponent<Tilemap>();         // Tilemapを取得
             _groundRoot.AddComponent<TilemapRenderer>();            // Rendererをアタッチ
+            _fragileParent = new GameObject("Fragile");             // 壊れるブロックの親オブジェクト
+            _fragileParent.transform.parent = _stageRoot.transform; // ステージの親オブジェクトの子オブジェクトとする
         }
 
         private void InstantiateGround(StageSaveData stageData)
@@ -188,10 +195,10 @@ namespace MaruSikaku.Gameplay
             return contours;
         }
 
-        private void InstantiateStageObject(StageObjectSaveData stageObj)
+        private GameObject InstantiateStageObject(StageObjectSaveData stageObj)
         {
             var prefab = SelectPrefab(stageObj.Type);       // Prefab取得
-            Instantiate(prefab, GetActualPos(stageObj.Pos), Quaternion.identity, _stageRoot.transform);     // ステージオブジェクト生成
+            return Instantiate(prefab, GetActualPos(stageObj.Pos), Quaternion.identity, _stageRoot.transform);  // ステージオブジェクト生成
         }
 
         private GameObject SelectPrefab(EStageObjectType type)
@@ -205,6 +212,28 @@ namespace MaruSikaku.Gameplay
                 EStageObjectType.Wall => _wallPrefab,
                 _ => throw new NotImplementedException($"型{nameof(EStageObjectType)}の値{type}は未実装です．")
             };
+        }
+
+        /// <summary>
+        /// ステージオブジェクト間の関係を構築します．
+        /// 例：スイッチと対応する壁の設定
+        /// </summary>
+        private void BuildStageObjectRelation(Dictionary<int, (EStageObjectType type, StageObjectSaveData saveData, GameObject obj)> stageObjMap)
+        {
+            // スイッチと対応する壁の設定
+            {
+                foreach (var (type, saveData, obj) in stageObjMap.Where(m => m.Value.type is EStageObjectType.Wall).Select(w => w.Value))    // 全ての壁オブジェクトを見る
+                {
+                    if (!stageObjMap.TryGetValue(saveData.SwitchId, out var switchInfo) ||
+                        switchInfo.type is not EStageObjectType.Switch)                         // 壁に対応するスイッチが存在しない場合
+                    {
+                        throw new Exception($"壁(ID:{saveData.Id})に対応するスイッチ(ID:{saveData.SwitchId})が存在しません．");
+                    }
+
+                    var switchController = switchInfo.obj.GetComponent<PressureSwitch>();       // スイッチのControllerを取得
+                    switchController.RegisterWall(obj.GetComponent<OpenableWall>());   // 壁を登録
+                }
+            }
         }
 
         private Vector2 GetActualPos(Vector2Int pos)

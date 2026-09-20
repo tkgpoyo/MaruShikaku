@@ -21,12 +21,12 @@ namespace MaruSikaku.Editor.Data
         /// <summary>セル座標と地形タイルの対応</summary>
         private Dictionary<Vector2Int, StageTerrainCell> _terrainDic;
         /// <summary>セル座標とステージオブジェクトの対応</summary>
-        private Dictionary<Vector2Int, StageObject> _stageObjectDic;
+        private Dictionary<Vector2Int, StageObjectDisplayData> _stageObjectDic;
         /// <summary>地形タイルのリスト</summary>
         private NotifyList<StageTerrainCell> _terrainCells;
 
         /// <summary>ステージ上のオブジェクトのリスト</summary>
-        private NotifyList<StageObject> _stageObjects;
+        private NotifyList<StageObjectDisplayData> _stageObjects;
 
         public StageDisplayData()
         {
@@ -113,7 +113,7 @@ namespace MaruSikaku.Editor.Data
         /// <summary>地形タイルのリスト</summary>
         public IReadOnlyList<StageTerrainCell> TerrainCells => _terrainCells;
         /// <summary>ステージオブジェクトのリスト</summary>
-        public IReadOnlyList<StageObject> StageObjects => _stageObjects;
+        public IReadOnlyList<StageObjectDisplayData> StageObjects => _stageObjects;
         /// <summary>ステージが編集されたかどうか</summary>
         public bool IsChanged => _isChanged;
         #endregion プロパティ
@@ -267,7 +267,7 @@ namespace MaruSikaku.Editor.Data
 
         private void OnStageObjectsChanged(object sender, BindablePropertyChangedEventArgs e)
         {
-            if (e.propertyName == $"Item.{nameof(StageObject.Pos)}")
+            if (e.propertyName == $"Item.{nameof(StageObjectDisplayData.Pos)}")
             {
                 var prevKeyValuePair = _stageObjectDic.FirstOrDefault(d => d.Value == sender);
             }
@@ -290,14 +290,14 @@ namespace MaruSikaku.Editor.Data
             _terrainCells.Remove(terrainCell);
         }
 
-        public void AddStageObject(StageObject stageObject)
+        public void AddStageObject(StageObjectDisplayData stageObject)
         {
             if (HasAnyStageElement(stageObject.Pos)) { return; }
             _stageObjectDic.Add(stageObject.Pos, stageObject);
             _stageObjects.Add(stageObject);
         }
 
-        public void RemoveStageObject(StageObject stageObject)
+        public void RemoveStageObject(StageObjectDisplayData stageObject)
         {
             if (!_stageObjectDic.ContainsKey(stageObject.Pos)) { return; }
             _stageObjectDic.Remove(stageObject.Pos);
@@ -312,7 +312,7 @@ namespace MaruSikaku.Editor.Data
             return false;
         }
 
-        public bool TryGetStageObject(Vector2Int pos, out StageObject stageObject)
+        public bool TryGetStageObject(Vector2Int pos, out StageObjectDisplayData stageObject)
         {
             if (_stageObjectDic.TryGetValue(pos, out stageObject)) { return true; }
 
@@ -337,10 +337,10 @@ namespace MaruSikaku.Editor.Data
             Notify(nameof(TerrainCells));
         }
 
-        public void SetStageObjects(IEnumerable<StageObject> stageObjects)
+        public void SetStageObjects(IEnumerable<StageObjectDisplayData> stageObjects)
         {
             _stageObjects.propertyChanged -= OnStageObjectsChanged;
-            _stageObjects = new NotifyList<StageObject>(stageObjects);
+            _stageObjects = new NotifyList<StageObjectDisplayData>(stageObjects);
             _stageObjects.propertyChanged += OnStageObjectsChanged;
             _stageObjectDic = _stageObjects.ToDictionary(stageObject => stageObject.Pos);
 

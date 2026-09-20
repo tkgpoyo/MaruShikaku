@@ -43,7 +43,7 @@ namespace MaruSikaku.Editor.Data
             return new(terrainSaveData.Pos, terrainSaveData.Type);
         }
 
-        private static StageObjectSaveData ToObjectSaveData(StageObject stageObject)
+        private static StageObjectSaveData ToObjectSaveData(StageObjectDisplayData stageObject)
         {
             if (stageObject is WallObject wallObject)
             {
@@ -65,7 +65,7 @@ namespace MaruSikaku.Editor.Data
             }
         }
 
-        private static StageObject FromObjectSaveData(StageObjectSaveData objectSaveData)
+        private static StageObjectDisplayData FromObjectSaveData(StageObjectSaveData objectSaveData)
         {
             switch (objectSaveData.Type)
             {

@@ -136,7 +136,7 @@ namespace MaruSikaku.Editor.Custom
             //↓オブジェクト配置後に選択中セルを変更しないと，オブジェクトプロパティビューがうまく更新されない
             EditContext.SelectedCell = pos;         // いずれのモードにおいても，クリックしたセルを選択状態にする
 
-            StageObject InstantiateStageObject(Vector2Int pos, EStageEditMode mode)
+            StageObjectDisplayData InstantiateStageObject(Vector2Int pos, EStageEditMode mode)
             {
                 return mode switch
                 {
@@ -345,7 +345,7 @@ namespace MaruSikaku.Editor.Custom
 
         }
 
-        private void DrawStageObject(Painter2D painter, StageObject stageObject)
+        private void DrawStageObject(Painter2D painter, StageObjectDisplayData stageObject)
         {
             var rect = CellToRect(stageObject.Pos);
             switch (stageObject.Type)

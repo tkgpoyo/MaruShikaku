@@ -16,7 +16,7 @@ namespace MaruSikaku.Stage
         Wall,
     }
 
-    public abstract class StageObject : INotifyBindablePropertyChanged
+    public abstract class StageObjectDisplayData : INotifyBindablePropertyChanged
     {
         public event EventHandler<BindablePropertyChangedEventArgs> propertyChanged;
 
@@ -61,7 +61,7 @@ namespace MaruSikaku.Stage
 
         public abstract EStageObjectType Type { get; }
 
-        public StageObject(int id, Vector2Int pos, bool isDeleted = false)
+        public StageObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false)
         {
             Id = id;
             Pos = pos;
@@ -111,7 +111,7 @@ namespace MaruSikaku.Stage
         }
     }
 
-    public class SpringObject : StageObject
+    public class SpringObject : StageObjectDisplayData
     {
         public override EStageObjectType Type => EStageObjectType.Spring;
         public SpringObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
@@ -119,7 +119,7 @@ namespace MaruSikaku.Stage
         }
     }
 
-    public class FragileObject : StageObject
+    public class FragileObject : StageObjectDisplayData
     {
         public override EStageObjectType Type => EStageObjectType.Fragile;
         public FragileObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
@@ -127,7 +127,7 @@ namespace MaruSikaku.Stage
         }
     }
 
-    public class MovableObject : StageObject
+    public class MovableObject : StageObjectDisplayData
     {
         public override EStageObjectType Type => EStageObjectType.Movable;
         public MovableObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
@@ -135,7 +135,7 @@ namespace MaruSikaku.Stage
         }
     }
 
-    public class SwitchObject : StageObject
+    public class SwitchObject : StageObjectDisplayData
     {
         public override EStageObjectType Type => EStageObjectType.Switch;
         public SwitchObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
@@ -143,7 +143,7 @@ namespace MaruSikaku.Stage
         }
     }
 
-    public class WallObject : StageObject
+    public class WallObject : StageObjectDisplayData
     {
         [CreateProperty]
         public int SwitchId

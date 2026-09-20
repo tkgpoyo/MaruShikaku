@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using MaruSikaku.Gameplay.Players;
+using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace MaruSikaku.Gameplay.Stages.Gimmicks
 {
@@ -15,7 +17,7 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         private const string PARAM_PRESS = "Press";
 
         /// <summary>開閉可能な壁</summary>
-        [SerializeField] private OpenableWall[] _openableWalls;
+        [SerializeField, ReadOnly] private List<OpenableWall> _openableWalls;
 
         /// <summary>Animator</summary>
         private Animator _anim;
@@ -58,6 +60,16 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
                     wall.Close();                       // 壁を閉じる
                 }
             }
+        }
+
+        /// <summary>
+        /// 壁オブジェクトを登録します．
+        /// </summary>
+        /// <param name="wall"></param>
+        public void RegisterWall(OpenableWall wall)
+        {
+            Assert.IsNotNull<OpenableWall>(wall);
+            _openableWalls.Add(wall);
         }
     }
 }
