@@ -13,7 +13,6 @@
             </ui:VisualElement>
             <ui:VisualElement name="commandRow" class="row command-row">
                 <ui:Button text="New" name="newButton" class="small-button"/>
-                <ui:Button text="Load" name="loadButton" class="small-button"/>
                 <ui:Button text="Save" name="saveButton" class="small-button"/>
                 <ui:Button text="Save As" name="saveAsButton" class="small-button"/>
             </ui:VisualElement>
