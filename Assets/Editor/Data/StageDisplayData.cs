@@ -17,6 +17,7 @@ namespace MaruSikaku.Editor.Data
         /// <summary>ステージの最小サイズのY</summary>
         private const int STAGE_MIN_SIZE_Y = 10;
 
+        private bool _isChanged = false;
         /// <summary>セル座標と地形タイルの対応</summary>
         private Dictionary<Vector2Int, StageTerrainCell> _terrainDic;
         /// <summary>セル座標とステージオブジェクトの対応</summary>
@@ -113,6 +114,8 @@ namespace MaruSikaku.Editor.Data
         public IReadOnlyList<StageTerrainCell> TerrainCells => _terrainCells;
         /// <summary>ステージオブジェクトのリスト</summary>
         public IReadOnlyList<StageObject> StageObjects => _stageObjects;
+        /// <summary>ステージが編集されたかどうか</summary>
+        public bool IsChanged => _isChanged;
         #endregion プロパティ
 
         #region 画面表示用プロパティ
@@ -348,6 +351,17 @@ namespace MaruSikaku.Editor.Data
         {
             return  0 <= pos.x && pos.x < SizeX && 0 <= pos.y && pos.y < SizeY;
         }
+
+        /// <summary>
+        /// ステージが保存されたこととするメソッドです．
+        /// </summary>
+        /// <remarks>
+        /// ステージ編集画面で保存ボタンが押された時に呼び出す．
+        /// </remarks>
+        public void SetAsSaved()
+        {
+            _isChanged = false;
+        }
         #endregion メソッド
 
         #region 内部関数
@@ -357,6 +371,7 @@ namespace MaruSikaku.Editor.Data
         /// <param name="property">プロパティ名</param>
         private void Notify([CallerMemberName] string property = "")
         {
+            _isChanged = true;      // 変更されたら編集済みとする
             propertyChanged?.Invoke(this, new(property));
         }
         #endregion 内部関数

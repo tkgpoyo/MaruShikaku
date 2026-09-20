@@ -58,7 +58,7 @@ namespace MaruSikaku.Editor.Data
         public StageEditContext EditContext
         {
             get => _editContext;
-            private set {
+            set {
                 if (_editContext == value) { return; }
                 if (_editContext != null) {
                     _editContext.propertyChanged -= OnEditContextChanged;

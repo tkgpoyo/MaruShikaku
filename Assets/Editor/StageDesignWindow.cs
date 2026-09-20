@@ -73,6 +73,7 @@ namespace MaruSikaku.Editor
 
             // header部分のボタン処理イベントの登録
             rootVisualElement.Q<Button>("browseButton").clicked += OnBrowse;
+            rootVisualElement.Q<Button>("newButton").clicked += OnNew;
             rootVisualElement.Q<Button>("saveButton").clicked += OnSave;
             rootVisualElement.Q<Button>("saveAsButton").clicked += OnSaveAs;
             // tool部分のボタン処理イベントの登録
@@ -115,12 +116,27 @@ namespace MaruSikaku.Editor
             _dataSource.StageData = stageDisplayData;
         }
 
+        private void OnNew()
+        {
+            if (_dataSource.StageData.IsChanged &&
+                !EditorUtility.DisplayDialog("確認", "ステージが編集されています．変更を破棄しますか？", "OK", "キャンセル"))
+            {
+                return;                                     // 変更を破棄しない場合は新規作成しない
+            }
+
+            var path = EditorUtility.SaveFilePanel("ステージファイル保存先を選択", Application.dataPath, "stage", "json");  // ステージファイル保存先を選択
+            if (string.IsNullOrEmpty(path)) { return; }     // ファイルパスが空白なら新規作成しない
+
+            Reset();
+            _dataSource.JsonPath = path;
+        }
+
         private void OnSave()
         {
             string path;
             if (string.IsNullOrEmpty(_dataSource.JsonPath))
             {
-                path = EditorUtility.SaveFilePanel("JSONファイル保存先を選択", Application.dataPath, "stage", "json");   // JSONファイル保存先を選択
+                path = EditorUtility.SaveFilePanel("ステージファイル保存先を選択", Application.dataPath, "stage", "json");   // ステージファイル保存先を選択
                 if (string.IsNullOrWhiteSpace(path)) { return; }
             }
             else
@@ -128,9 +144,10 @@ namespace MaruSikaku.Editor
                 path = _dataSource.JsonPath;
             }
 
-            var json = EditorJsonUtility.ToJson(StageDataConverter.ToStageSaveData(_dataSource.StageData), true);
+            _dataSource.StageData.SetAsSaved();         // 保存されたとする
 
-            File.WriteAllText(path, json);
+            var json = EditorJsonUtility.ToJson(StageDataConverter.ToStageSaveData(_dataSource.StageData), true);
+            File.WriteAllText(path, json);              // ファイルに保存
         }
 
         private void OnSaveAs()
@@ -220,6 +237,13 @@ namespace MaruSikaku.Editor
                 toolButton.RemoveFromClassList(TOOL_BUTTON_SELECTED_CLASS);
             }
             GetToolButton(mode).AddToClassList(TOOL_BUTTON_SELECTED_CLASS);
+        }
+
+        private void Reset()
+        {
+            _dataSource.StageData = new();          // ステージデータを新規作成
+            _dataSource.EditContext = new();        // 編集状態を新規作成
+            OnChangeTool(EStageEditMode.Select);    // Selectモードにする
         }
     }
 }
