@@ -238,7 +238,7 @@ namespace MaruSikaku.Gameplay
 
         private Vector2 GetActualPos(Vector2Int pos)
         {
-            return new Vector2(pos.x + 0.5f, pos.y + 0.5f) + TilemapOrigin;
+            return new Vector2(pos.x, pos.y) + TilemapOrigin;
         }
 
         private Vector2 TilemapOrigin => _tilemap.GetCellCenterWorld(Vector3Int.zero);
