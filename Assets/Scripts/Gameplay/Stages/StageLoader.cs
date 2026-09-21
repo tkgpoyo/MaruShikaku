@@ -198,7 +198,14 @@ namespace MaruSikaku.Gameplay
         private GameObject InstantiateStageObject(StageObjectSaveData stageObj)
         {
             var prefab = SelectPrefab(stageObj.Type);       // Prefab取得
-            return Instantiate(prefab, GetActualPos(stageObj.Pos), Quaternion.identity, _stageRoot.transform);  // ステージオブジェクト生成
+            var gameObj = Instantiate(prefab, GetActualPos(stageObj.Pos), Quaternion.identity, _stageRoot.transform);   // ステージオブジェクト生成
+            if (stageObj.Type is EStageObjectType.Wall)     // 壁の場合
+            {
+                // 壁の長さの設定が必要
+                var wallController = gameObj.GetComponent<OpenableWall>();
+                wallController.YLength = stageObj.YLength;
+            }
+            return gameObj;
         }
 
         private GameObject SelectPrefab(EStageObjectType type)

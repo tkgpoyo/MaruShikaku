@@ -45,13 +45,14 @@ namespace MaruSikaku.Editor.Data
 
         private static StageObjectSaveData ToObjectSaveData(StageObjectDisplayData stageObject)
         {
-            if (stageObject is WallObject wallObject)
+            if (stageObject is WallObjectDisplayData wallObject)
             {
                 return new(
                     wallObject.Id,
                     wallObject.Pos,
                     wallObject.Type,
-                    wallObject.SwitchId
+                    wallObject.SwitchId,
+                    wallObject.YLength
                 );
             }
             else
@@ -60,6 +61,7 @@ namespace MaruSikaku.Editor.Data
                     stageObject.Id,
                     stageObject.Pos,
                     stageObject.Type,
+                    -1,
                     -1
                 );
             }
@@ -70,27 +72,27 @@ namespace MaruSikaku.Editor.Data
             switch (objectSaveData.Type)
             {
                 case EStageObjectType.Fragile:
-                    return new FragileObject(
+                    return new FragileObjectDisplayData(
                         objectSaveData.Id,
                         objectSaveData.Pos
                     );
                 case EStageObjectType.Movable:
-                    return new MovableObject(
+                    return new MovableObjectDisplayData(
                         objectSaveData.Id,
                         objectSaveData.Pos
                     );
                 case EStageObjectType.Spring:
-                    return new SpringObject(
+                    return new SpringObjectDisplayData(
                         objectSaveData.Id,
                         objectSaveData.Pos
                     );
                 case EStageObjectType.Switch:
-                    return new SwitchObject(
+                    return new SwitchObjectDisplayData(
                         objectSaveData.Id,
                         objectSaveData.Pos
                     );
                 case EStageObjectType.Wall:
-                    return new WallObject(
+                    return new WallObjectDisplayData(
                         objectSaveData.Id,
                         objectSaveData.Pos,
                         objectSaveData.SwitchId

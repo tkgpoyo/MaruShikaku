@@ -140,11 +140,11 @@ namespace MaruSikaku.Editor.Custom
             {
                 return mode switch
                 {
-                    EStageEditMode.Spring => new SpringObject(GetNextId(), pos),
-                    EStageEditMode.Fragile => new FragileObject(GetNextId(), pos),
-                    EStageEditMode.Movable => new MovableObject(GetNextId(), pos),
-                    EStageEditMode.Switch => new SwitchObject(GetNextId(), pos),
-                    EStageEditMode.Wall => new WallObject(GetNextId(), pos),
+                    EStageEditMode.Spring => new SpringObjectDisplayData(GetNextId(), pos),
+                    EStageEditMode.Fragile => new FragileObjectDisplayData(GetNextId(), pos),
+                    EStageEditMode.Movable => new MovableObjectDisplayData(GetNextId(), pos),
+                    EStageEditMode.Switch => new SwitchObjectDisplayData(GetNextId(), pos),
+                    EStageEditMode.Wall => new WallObjectDisplayData(GetNextId(), pos),
                     _ => throw new NotImplementedException($"{mode}は未対応です．")
                 };
             }
@@ -464,12 +464,15 @@ namespace MaruSikaku.Editor.Custom
                     painter.ClosePath();
                     break;
                 case EStageObjectType.Wall:
+                    var wallObj = stageObject as WallObjectDisplayData;     // 壁オブジェクトを取得
                     painter.BeginPath();
                     painter.fillColor = Color.yellow;
                     painter.strokeColor = Color.black;
                     painter.MoveTo(CellToPixel(stageObject.Pos, y: 1));
-                    painter.LineTo(CellToPixel(stageObject.Pos, y: 0.5f));
-                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
+                    //painter.LineTo(CellToPixel(stageObject.Pos, y: 0.5f));
+                    //painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 0.5f));
+                    painter.LineTo(CellToPixel(stageObject.Pos, y: 1-wallObj.YLength));
+                    painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 1-wallObj.YLength));
                     painter.LineTo(CellToPixel(stageObject.Pos, x: 0.3f, y: 1));
                     painter.LineTo(CellToPixel(stageObject.Pos, y: 1));
                     painter.Fill();
@@ -599,8 +602,9 @@ namespace MaruSikaku.Editor.Custom
         /// <returns>Pixel座標</returns>
         private Vector2 CellToPixel(Vector2Int cell, float x = 0, float y = 0)
         {
-            x = Mathf.Clamp(x, 0, 1);
-            y = Mathf.Clamp(y, 0, 1);
+            // 壁のy方向の長さ実装のためにClamp処理を削除
+            //x = Mathf.Clamp(x, 0, 1);
+            //y = Mathf.Clamp(y, 0, 1);
 
             return new ((cell.x + x) * _cellPixel, (StageData.SizeY - (cell.y + y)) * _cellPixel);
         }

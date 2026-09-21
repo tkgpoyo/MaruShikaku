@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TMPro;
 using Unity.Properties;
@@ -59,6 +60,10 @@ namespace MaruSikaku.Stage
         }
         private bool _isDeleted;
 
+        /// <summary>オブジェクトが占める領域</summary>
+        public HashSet<Vector2Int> Region => _region;
+        private HashSet<Vector2Int> _region = new();
+
         public abstract EStageObjectType Type { get; }
 
         public StageObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false)
@@ -102,48 +107,53 @@ namespace MaruSikaku.Stage
         private int _switchId = -1;
         public int SwitchId => _switchId;
 
-        public StageObjectSaveData(int id, Vector2Int pos, EStageObjectType type, int switchId)
+        [SerializeField]
+        private int _yLength = -1;
+        public int YLength => _yLength;
+
+        public StageObjectSaveData(int id, Vector2Int pos, EStageObjectType type, int switchId, int yLength)
         {
             _id = id;
             _pos = pos;
             _type = type;
             _switchId = switchId;
+            _yLength = yLength;
         }
     }
 
-    public class SpringObject : StageObjectDisplayData
+    public class SpringObjectDisplayData : StageObjectDisplayData
     {
         public override EStageObjectType Type => EStageObjectType.Spring;
-        public SpringObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
+        public SpringObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
     }
 
-    public class FragileObject : StageObjectDisplayData
+    public class FragileObjectDisplayData : StageObjectDisplayData
     {
         public override EStageObjectType Type => EStageObjectType.Fragile;
-        public FragileObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
+        public FragileObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
     }
 
-    public class MovableObject : StageObjectDisplayData
+    public class MovableObjectDisplayData : StageObjectDisplayData
     {
         public override EStageObjectType Type => EStageObjectType.Movable;
-        public MovableObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
+        public MovableObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
     }
 
-    public class SwitchObject : StageObjectDisplayData
+    public class SwitchObjectDisplayData : StageObjectDisplayData
     {
         public override EStageObjectType Type => EStageObjectType.Switch;
-        public SwitchObject(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
+        public SwitchObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
     }
 
-    public class WallObject : StageObjectDisplayData
+    public class WallObjectDisplayData : StageObjectDisplayData
     {
         [CreateProperty]
         public int SwitchId
@@ -158,9 +168,22 @@ namespace MaruSikaku.Stage
         }
         private int _switchId;
 
+        [CreateProperty]
+        public int YLength
+        {
+            get => _yLength;
+            set
+            {
+                if (_yLength == value) { return; }
+                _yLength = value;
+                Notify();
+            }
+        }
+        private int _yLength = 1;
+
         public override EStageObjectType Type => EStageObjectType.Wall;
 
-        public WallObject(int id, Vector2Int pos, int switchId = -1, bool isDeleted = false) : base(id, pos, isDeleted)
+        public WallObjectDisplayData(int id, Vector2Int pos, int switchId = -1, bool isDeleted = false) : base(id, pos, isDeleted)
         {
             SwitchId = switchId;
         }

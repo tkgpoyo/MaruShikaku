@@ -130,12 +130,12 @@ namespace MaruSikaku.Editor.Custom
             switch (stageObject.Type)
             {
                 case EStageObjectType.Wall:
-                    BuildWallFields((WallObject)stageObject);
+                    BuildWallFields((WallObjectDisplayData)stageObject);
                     break;
             }
         }
 
-        private void BuildWallFields(WallObject wall)
+        private void BuildWallFields(WallObjectDisplayData wall)
         {
             var switchIdField = new IntegerField("Switch ID");
             switchIdField.SetValueWithoutNotify(wall.SwitchId);
@@ -147,6 +147,46 @@ namespace MaruSikaku.Editor.Custom
             switchIdField.RegisterValueChangedCallback(onSwitchIdChanged);
             _fieldEventUnbinders.Add(() => switchIdField.UnregisterValueChangedCallback(onSwitchIdChanged));
             Add(switchIdField);
+
+            var lengthField = new IntegerField("Length");
+            lengthField.SetValueWithoutNotify(wall.YLength);
+            lengthField.isDelayed = true;
+            EventCallback<ChangeEvent<int>> onLengthChanged = evt =>
+            {
+                // TODO: 配置できるかどうかの判定も踏まえて処理を実装
+                if (evt.newValue <= 0)                                          // 壁の長さが0以下の場合
+                {
+                    lengthField.SetValueWithoutNotify(wall.YLength);            // 値を変更前にリセット
+                    return;
+                }
+
+                var canPlace = true;                                            // 壁を配置できるかどうか
+                // 下にオブジェクトや地面がないかどうかを確認
+                for (int l = 2; l <= evt.newValue; l++)
+                {
+                    var x = wall.Pos.x;                                         // 確認するx座標
+                    var y = wall.Pos.y - (l - 1);                               // 確認するy座標
+                    var pos = new Vector2Int(x, y);
+                    if (!StageData.IsInsideStage(pos)||                         // ステージ外か
+                        StageData.HasAnyStageElement(pos))                      // 確認する座標に何らかのオブジェクトがある場合
+                    {
+                        canPlace = false;                                       // おけないとする
+                        break;
+                    }
+                }
+
+                if (!canPlace)                                                  // おけない場合
+                {
+                    lengthField.SetValueWithoutNotify(wall.YLength);            // 値を変更前にリセット
+                    return;
+                }
+
+                // おける場合は値を変更
+                wall.YLength = evt.newValue;
+            };
+            lengthField.RegisterValueChangedCallback(onLengthChanged);
+            _fieldEventUnbinders.Add(() => lengthField.UnregisterValueChangedCallback(onLengthChanged));
+            Add(lengthField);
         }
 
         private void UnbindCurrentObject()

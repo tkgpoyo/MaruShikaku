@@ -320,6 +320,11 @@ namespace MaruSikaku.Editor.Data
             return false;
         }
 
+        /// <summary>
+        /// ステージオブジェクトや地面が指定の座標に存在するかどうかを判定します．
+        /// </summary>
+        /// <param name="pos">確認する座標</param>
+        /// <returns>指定の座標にステージオブジェクトか地面が存在するかどうか</returns>
         public bool HasAnyStageElement(Vector2Int pos)
         {
             if (_terrainDic.ContainsKey(pos) || _stageObjectDic.ContainsKey(pos)) { return true; }

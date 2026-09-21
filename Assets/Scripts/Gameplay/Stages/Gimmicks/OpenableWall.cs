@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         /// <summary>閉まり切った時のY方向の余白</summary>
         [SerializeField] private float _closeMargin = 0.01f;
         /// <summary>Y方向の長さ</summary>
-        [SerializeField] private float _yLength = 1f;
+        [SerializeField, ReadOnly] private float _yLength = 1f;
         /// <summary>下降を防ぐオブジェクトのレイヤー</summary>
         [SerializeField] private LayerMask _blockLayer;
         /// <summary>壁のSprite Renderer</summary>
@@ -26,6 +27,17 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
 
         private Coroutine _coroutine;
         private HashSet<Collider2D> _blockingColliders = new();
+
+        /// <summary>壁のY方向の長さ</summary>
+        public float YLength
+        {
+            get => _yLength;
+            set
+            {
+                _yLength = value;
+                SetHeight(_yLength);        // スケールなどを更新
+            }
+        }
 
         void OnCollisionEnter2D(Collision2D collision)
         {

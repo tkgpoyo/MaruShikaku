@@ -736,7 +736,8 @@
                 "y": 2
             },
             "_type": 4,
-            "_switchId": 2
+            "_switchId": 2,
+            "_yLength": 2
         },
         {
             "_id": 2,
@@ -745,7 +746,8 @@
                 "y": 1
             },
             "_type": 3,
-            "_switchId": -1
+            "_switchId": -1,
+            "_yLength": -1
         }
     ]
 }
