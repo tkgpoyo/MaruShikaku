@@ -95,7 +95,8 @@ namespace MaruSikaku.Editor.Data
                     return new WallObjectDisplayData(
                         objectSaveData.Id,
                         objectSaveData.Pos,
-                        objectSaveData.SwitchId
+                        objectSaveData.SwitchId,
+                        objectSaveData.YLength
                     );
                 default:
                     throw new NotImplementedException($"型{objectSaveData.Type}は実装していません．");

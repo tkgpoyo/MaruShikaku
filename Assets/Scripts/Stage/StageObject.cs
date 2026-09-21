@@ -225,9 +225,10 @@ namespace MaruSikaku.Stage
 
         public override EStageObjectType Type => EStageObjectType.Wall;
 
-        public WallObjectDisplayData(int id, Vector2Int pos, int switchId = -1, bool isDeleted = false) : base(id, pos, isDeleted)
+        public WallObjectDisplayData(int id, Vector2Int pos, int switchId, int yLength, bool isDeleted = false) : base(id, pos, isDeleted)
         {
             SwitchId = switchId;
+            YLength = yLength;
         }
 
         protected override IEnumerable<Vector2Int> EnumerateRegionCells()

@@ -12,6 +12,7 @@ namespace MaruSikaku.Editor.Custom
         private StageObjectDisplayData _currentObject;
         private readonly List<Action> _fieldEventUnbinders = new();
         private bool _isEditContextBound;
+        private bool _isStageDataBound;
 
         public StageObjectPropertyView()
         {
@@ -27,7 +28,9 @@ namespace MaruSikaku.Editor.Custom
             set
             {
                 if (_stageData == value) { return; }
+                UnbindStageData();
                 _stageData = value;
+                BindStageData();
                 Rebuild();
             }
         }
@@ -186,6 +189,20 @@ namespace MaruSikaku.Editor.Custom
             _isEditContextBound = false;
         }
 
+        private void BindStageData()
+        {
+            if (_isStageDataBound || _stageData == null || panel == null) { return; }
+            _stageData.propertyChanged += OnStageDataChanged;
+            _isStageDataBound = true;
+        }
+
+        private void UnbindStageData()
+        {
+            if (!_isStageDataBound || _stageData == null) { return; }
+            _stageData.propertyChanged -= OnStageDataChanged;
+            _isStageDataBound = false;
+        }
+
         private void OnAttachToPanel(AttachToPanelEvent evt)
         {
             BindEditContext();
@@ -198,12 +215,32 @@ namespace MaruSikaku.Editor.Custom
             UnbindCurrentObject();
         }
 
+        /// <summary>
+        /// 編集状態が変更された時のイベントハンドラ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnEditContextChanged(object sender, BindablePropertyChangedEventArgs e)
         {
             switch (e.propertyName)
             {
-                case nameof(StageEditContext.SelectedCell):
-                    Rebuild();
+                case nameof(StageEditContext.SelectedCell):     // 選択中のセルが変更された場合
+                    Rebuild();                                  // 再ビルド
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// ステージ情報が変更された時のイベントハンドラ
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnStageDataChanged(object sender, BindablePropertyChangedEventArgs e)
+        {
+            switch (e.propertyName)
+            {
+                case nameof(StageDisplayData.StageObjects):     // オブジェクトが変更された場合
+                    Rebuild();                                  // 再ビルド
                     break;
             }
         }

@@ -144,7 +144,7 @@ namespace MaruSikaku.Editor.Custom
                     EStageEditMode.Fragile => new FragileObjectDisplayData(GetNextId(), pos),
                     EStageEditMode.Movable => new MovableObjectDisplayData(GetNextId(), pos),
                     EStageEditMode.Switch => new SwitchObjectDisplayData(GetNextId(), pos),
-                    EStageEditMode.Wall => new WallObjectDisplayData(GetNextId(), pos),
+                    EStageEditMode.Wall => new WallObjectDisplayData(GetNextId(), pos, -1, 1),      // スイッチID未登録，壁の長さは1で初期化
                     _ => throw new NotImplementedException($"{mode}は未対応です．")
                 };
             }
