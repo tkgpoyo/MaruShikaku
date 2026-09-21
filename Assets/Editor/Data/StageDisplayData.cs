@@ -37,6 +37,7 @@ namespace MaruSikaku.Editor.Data
 
             _terrainCells.propertyChanged += OnTerrainCellsChanged;
             _stageObjects.propertyChanged += OnStageObjectsChanged;
+            _stageObjects.itemPropertyChanged += OnStageObjectPropertyChanged;
         }
 
         #region プロパティ
@@ -267,11 +268,28 @@ namespace MaruSikaku.Editor.Data
 
         private void OnStageObjectsChanged(object sender, BindablePropertyChangedEventArgs e)
         {
-            if (e.propertyName == $"Item.{nameof(StageObjectDisplayData.Pos)}")
-            {
-                var prevKeyValuePair = _stageObjectDic.FirstOrDefault(d => d.Value == sender);
-            }
             Notify(nameof(StageObjects));
+        }
+
+        private void OnStageObjectPropertyChanged(object sender, ItemPropertyChangedEventArgs<StageObjectDisplayData> e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(StageObjectDisplayData.Region):
+                    {
+                        // 登録する領域内にすでに他のオブジェクトがあるなら例外を投げる
+                        if (e.Item.Region.Any(
+                            cell =>
+                            (TryGetTerrainCell(cell, out _)) ||
+                            (TryGetStageObject(cell, out var obj) && !ReferenceEquals(obj, e.Item))))
+                        {
+                            throw new InvalidOperationException($"ステージオブジェクトの領域が重複しています．");
+                        }
+                        UnregisterRegion(e.Item);               // 現在登録されている情報を削除
+                        RegisterRegion(e.Item);                 // 新しく再登録
+                    }
+                    break;
+            }
         }
         #endregion イベント
 
@@ -292,15 +310,15 @@ namespace MaruSikaku.Editor.Data
 
         public void AddStageObject(StageObjectDisplayData stageObject)
         {
-            if (HasAnyStageElement(stageObject.Pos)) { return; }
-            _stageObjectDic.Add(stageObject.Pos, stageObject);
+            if (!CanPlaceRegion(stageObject.Region, stageObject)) { return; }   // おけない場合は追加しない
+            RegisterRegion(stageObject);
             _stageObjects.Add(stageObject);
         }
 
         public void RemoveStageObject(StageObjectDisplayData stageObject)
         {
-            if (!_stageObjectDic.ContainsKey(stageObject.Pos)) { return; }
-            _stageObjectDic.Remove(stageObject.Pos);
+            if (!_stageObjects.Contains(stageObject)) { return; }
+            UnregisterRegion(stageObject);
             _stageObjects.Remove(stageObject);
         }
 
@@ -317,6 +335,41 @@ namespace MaruSikaku.Editor.Data
             if (_stageObjectDic.TryGetValue(pos, out stageObject)) { return true; }
 
             stageObject = null;
+            return false;
+        }
+
+        /// <summary>
+        /// 指定の位置にオブジェクトを移動可能かを判定し，移動可能ならばその座標へ移動します．
+        /// </summary>
+        /// <param name="stageObj">判定するオブジェクト</param>
+        /// <param name="targetPos">移動先の座標</param>
+        /// <returns>移動可能かどうか</returns>
+        public bool TryMoveObject(StageObjectDisplayData stageObj, Vector2Int targetPos)
+        {
+            if (_stageObjects.Contains(stageObj) &&                         // 指定のオブジェクトが登録されていて
+                CanPlaceRegion(stageObj.GetRegionAt(targetPos), stageObj))  // 移動できるなら
+            {
+                stageObj.MoveTo(targetPos);                                 // オブジェクトを移動
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 指定の長さに壁オブジェクトが設定可能かを判定し，設定可能ならばその長さに設定します．
+        /// </summary>
+        /// <param name="wall">壁オブジェクト</param>
+        /// <param name="targetLength">壁の長さ</param>
+        /// <returns>壁の長さを設定可能か</returns>
+        public bool TryChangeWallLength(WallObjectDisplayData wall, int targetLength)
+        {
+            if (targetLength < 1) { return false; }                             // 壁の長さが1未満なら不適切
+            if (_stageObjects.Contains(wall) &&                                 // 指定の壁オブジェクトが登録されていて
+                CanPlaceRegion(wall.GetRegionForLength(targetLength), wall))    // 長さを変更できるなら
+            {
+                wall.YLength = targetLength;                                    // 壁の長さを変更
+                return true;
+            }
             return false;
         }
 
@@ -344,10 +397,17 @@ namespace MaruSikaku.Editor.Data
 
         public void SetStageObjects(IEnumerable<StageObjectDisplayData> stageObjects)
         {
+            var objects = stageObjects?.ToList() ?? new List<StageObjectDisplayData>();
+            var objectDic = objects.SelectMany(stageObj => stageObj.Region.Select(cell => (Cell: cell, Object: stageObj)))
+                                   .ToDictionary(entry => entry.Cell, entry => entry.Object);
+            
             _stageObjects.propertyChanged -= OnStageObjectsChanged;
-            _stageObjects = new NotifyList<StageObjectDisplayData>(stageObjects);
+            _stageObjects.itemPropertyChanged -= OnStageObjectPropertyChanged;
+            _stageObjects.Clear();
+            _stageObjects = new(objects);
+            _stageObjectDic = objectDic;
             _stageObjects.propertyChanged += OnStageObjectsChanged;
-            _stageObjectDic = _stageObjects.ToDictionary(stageObject => stageObject.Pos);
+            _stageObjects.itemPropertyChanged += OnStageObjectPropertyChanged;
 
             Notify(nameof(StageObjects));
         }
@@ -378,6 +438,54 @@ namespace MaruSikaku.Editor.Data
         {
             _isChanged = true;      // 変更されたら編集済みとする
             propertyChanged?.Invoke(this, new(property));
+        }
+
+        /// <summary>
+        /// 現在辞書に登録されている領域情報を削除します．
+        /// </summary>
+        /// <param name="stageObj">登録解除するオブジェクト</param>
+        private void UnregisterRegion(StageObjectDisplayData stageObj)
+        {
+            var oldCells = _stageObjectDic.Where(pair => ReferenceEquals(pair.Value, stageObj))
+                                          .Select(pair => pair.Key).ToArray();      // 削除するセル
+            foreach (var oldCell in oldCells)
+            {
+                _stageObjectDic.Remove(oldCell);
+            }
+        }
+
+        /// <summary>
+        /// 辞書にオブジェクトの領域情報を登録します．
+        /// </summary>
+        /// <param name="stageObj">登録するオブジェクト</param>
+        private void RegisterRegion(StageObjectDisplayData stageObj)
+        {
+            foreach (var newCell in stageObj.Region)
+            {
+                _stageObjectDic.Add(newCell, stageObj);
+            }
+        }
+
+        /// <summary>
+        /// 領域が配置可能かどうかを判定します．
+        /// </summary>
+        /// <param name="region">領域</param>
+        /// <param name="excludeObject">判定除外するオブジェクト</param>
+        /// <returns></returns>
+        private bool CanPlaceRegion(IEnumerable<Vector2Int> region, StageObjectDisplayData excludeObject = default)
+        {
+            foreach (var cell in region)
+            {
+                if (!IsInsideStage(cell) ||                                     // ステージ外か
+                    _terrainDic.ContainsKey(cell) ||                            // 地面が存在するか
+                    (_stageObjectDic.TryGetValue(cell, out var stageObj) &&     // すでにマス内にオブジェクトが存在して
+                    !ReferenceEquals(stageObj, excludeObject)))                 // それが別のオブジェクトである場合
+                {
+                    return false;                                           // 配置不可能
+                }
+            }
+            // 領域内の全てのマスに他のオブジェクトがない場合は配置可能
+            return true;
         }
         #endregion 内部関数
     }

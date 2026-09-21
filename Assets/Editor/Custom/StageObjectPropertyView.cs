@@ -91,15 +91,14 @@ namespace MaruSikaku.Editor.Custom
             posXField.isDelayed = true;
             EventCallback<ChangeEvent<int>> onPosXChanged = e =>
             {
-                var newPos = new Vector2Int(e.newValue, stageObject.Pos.y);
-                if (!StageData.IsInsideStage(newPos) || StageData.HasAnyStageElement(newPos))
+                var newPos = new Vector2Int(e.newValue, stageObject.Pos.y); // 移動先の座標
+                if (!StageData.TryMoveObject(stageObject, newPos))          // 移動できない場合
                 {
-                    posXField.SetValueWithoutNotify(stageObject.Pos.x);
+                    posXField.SetValueWithoutNotify(stageObject.Pos.x);     // 元の値に戻す
                     return;
                 }
 
-                stageObject.MoveTo(newPos);
-                EditContext.SelectedCell = newPos;
+                EditContext.SelectedCell = newPos;                          // 選択セルを変更
             };
             posXField.RegisterValueChangedCallback(onPosXChanged);
             _fieldEventUnbinders.Add(() => posXField.UnregisterValueChangedCallback(onPosXChanged));
@@ -110,15 +109,14 @@ namespace MaruSikaku.Editor.Custom
             posYField.isDelayed = true;
             EventCallback<ChangeEvent<int>> onPosYChanged = e =>
             {
-                var newPos = new Vector2Int(stageObject.Pos.x, e.newValue);
-                if (!StageData.IsInsideStage(newPos) || StageData.HasAnyStageElement(newPos))
+                var newPos = new Vector2Int(stageObject.Pos.x, e.newValue); // 移動先の座標
+                if (!StageData.TryMoveObject(stageObject, newPos))          // 移動できない場合
                 {
-                    posYField.SetValueWithoutNotify(stageObject.Pos.y);
+                    posYField.SetValueWithoutNotify(stageObject.Pos.y);     // 元の値に戻す
                     return;
                 }
 
-                stageObject.MoveTo(newPos);
-                EditContext.SelectedCell = newPos;
+                EditContext.SelectedCell = newPos;                          // 選択セルを変更
             };
             posYField.RegisterValueChangedCallback(onPosYChanged);
             _fieldEventUnbinders.Add(() => posYField.UnregisterValueChangedCallback(onPosYChanged));
@@ -153,36 +151,11 @@ namespace MaruSikaku.Editor.Custom
             lengthField.isDelayed = true;
             EventCallback<ChangeEvent<int>> onLengthChanged = evt =>
             {
-                // TODO: 配置できるかどうかの判定も踏まえて処理を実装
-                if (evt.newValue <= 0)                                          // 壁の長さが0以下の場合
+                var targetLength = evt.newValue;                            // 目標の長さ
+                if (!StageData.TryChangeWallLength(wall, targetLength))     // 長さを変更できない場合
                 {
-                    lengthField.SetValueWithoutNotify(wall.YLength);            // 値を変更前にリセット
-                    return;
+                    lengthField.SetValueWithoutNotify(wall.YLength);        // 元の値に戻す
                 }
-
-                var canPlace = true;                                            // 壁を配置できるかどうか
-                // 下にオブジェクトや地面がないかどうかを確認
-                for (int l = 2; l <= evt.newValue; l++)
-                {
-                    var x = wall.Pos.x;                                         // 確認するx座標
-                    var y = wall.Pos.y - (l - 1);                               // 確認するy座標
-                    var pos = new Vector2Int(x, y);
-                    if (!StageData.IsInsideStage(pos)||                         // ステージ外か
-                        StageData.HasAnyStageElement(pos))                      // 確認する座標に何らかのオブジェクトがある場合
-                    {
-                        canPlace = false;                                       // おけないとする
-                        break;
-                    }
-                }
-
-                if (!canPlace)                                                  // おけない場合
-                {
-                    lengthField.SetValueWithoutNotify(wall.YLength);            // 値を変更前にリセット
-                    return;
-                }
-
-                // おける場合は値を変更
-                wall.YLength = evt.newValue;
             };
             lengthField.RegisterValueChangedCallback(onLengthChanged);
             _fieldEventUnbinders.Add(() => lengthField.UnregisterValueChangedCallback(onLengthChanged));

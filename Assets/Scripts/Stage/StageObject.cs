@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using TMPro;
 using Unity.Properties;
@@ -42,6 +43,7 @@ namespace MaruSikaku.Stage
             {
                 if (_pos == value) { return; }
                 _pos = value;
+                UpdateRegion();
                 Notify();
             }
         }
@@ -61,21 +63,60 @@ namespace MaruSikaku.Stage
         private bool _isDeleted;
 
         /// <summary>オブジェクトが占める領域</summary>
-        public HashSet<Vector2Int> Region => _region;
-        private HashSet<Vector2Int> _region = new();
+        public IReadOnlyCollection<Vector2Int> Region => _region ??= CreateRegionSnapshot();
+        private IReadOnlyCollection<Vector2Int> _region;
 
         public abstract EStageObjectType Type { get; }
+
+        /// <summary>
+        /// 領域を更新し，変更を通知します．
+        /// </summary>
+        protected void UpdateRegion()
+        {
+            _region = CreateRegionSnapshot();
+            Notify(nameof(Region));
+        }
+
+        /// <summary>
+        /// 占有するセルを列挙します．
+        /// </summary>
+        /// <returns>領域のセル一覧</returns>
+        protected virtual IEnumerable<Vector2Int> EnumerateRegionCells()
+        {
+            yield return Pos;
+        }
+
+        /// <summary>
+        /// 領域のスナップショットを作成します．
+        /// </summary>
+        /// <returns>領域のスナップショット</returns>
+        private IReadOnlyCollection<Vector2Int> CreateRegionSnapshot()
+        {
+            return new List<Vector2Int>(EnumerateRegionCells().Distinct()).AsReadOnly();
+        }
 
         public StageObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false)
         {
             Id = id;
-            Pos = pos;
+            _pos = pos;
             IsDeleted = isDeleted;
         }
 
         public void MoveTo(Vector2Int pos)
         {
             Pos = pos;
+        }
+
+        /// <summary>
+        /// 指定の位置にオブジェクトがある時の占有領域を計算します．
+        /// </summary>
+        /// <param name="pos">確認する位置</param>
+        /// <returns>位置に対する占有領域</returns>
+        public virtual IReadOnlyCollection<Vector2Int> GetRegionAt(Vector2Int pos)
+        {
+            var region = new List<Vector2Int>();
+            region.Add(pos);
+            return region;
         }
 
         /// <summary>
@@ -176,6 +217,7 @@ namespace MaruSikaku.Stage
             {
                 if (_yLength == value) { return; }
                 _yLength = value;
+                UpdateRegion();
                 Notify();
             }
         }
@@ -186,6 +228,34 @@ namespace MaruSikaku.Stage
         public WallObjectDisplayData(int id, Vector2Int pos, int switchId = -1, bool isDeleted = false) : base(id, pos, isDeleted)
         {
             SwitchId = switchId;
+        }
+
+        protected override IEnumerable<Vector2Int> EnumerateRegionCells()
+        {
+            for (int l = 0; l < YLength; l++)
+            {
+                yield return new Vector2Int(Pos.x, Pos.y - l);
+            }
+        }
+
+        public override IReadOnlyCollection<Vector2Int> GetRegionAt(Vector2Int pos)
+        {
+            var region = new List<Vector2Int>();
+            for (int l = 0; l < YLength; l++)
+            {
+                region.Add(new(pos.x, pos.y - l));
+            }
+            return region;
+        }
+
+        public IReadOnlyCollection<Vector2Int> GetRegionForLength(int length)
+        {
+            var region = new List<Vector2Int>();
+            for (int l = 0; l < length; l++)
+            {
+                region.Add(new(Pos.x, Pos.y - l));
+            }
+            return region;
         }
     }
 }
