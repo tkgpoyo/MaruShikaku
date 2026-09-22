@@ -571,4 +571,4 @@ MonoBehaviour:
   _groundCheckSize: {x: 0.6, y: 0.4}
   _groundLayer:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 1280

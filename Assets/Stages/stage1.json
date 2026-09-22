@@ -748,6 +748,16 @@
             "_type": 3,
             "_switchId": -1,
             "_yLength": -1
+        },
+        {
+            "_id": 3,
+            "_pos": {
+                "x": 6,
+                "y": 1
+            },
+            "_type": 1,
+            "_switchId": -1,
+            "_yLength": -1
         }
     ]
 }

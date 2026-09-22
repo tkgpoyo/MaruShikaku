@@ -18,11 +18,17 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
 
         /// <summary>開閉可能な壁</summary>
         [SerializeField, ReadOnly] private List<OpenableWall> _openableWalls;
+        /// <summary>
+        /// 判定除外するレイヤー
+        /// </summary>
+        [SerializeField] private LayerMask _excludeLayer;
 
         /// <summary>Animator</summary>
         private Animator _anim;
-        /// <summary>乗っているプレイヤー一覧</summary>
-        private HashSet<PlayerController> _pressingPlayers = new();
+        ///// <summary>乗っているプレイヤー一覧</summary>
+        //private HashSet<PlayerController> _pressingPlayers = new();
+        /// <summary>乗っているオブジェクト一覧</summary>
+        private HashSet<GameObject> _pressingObjects = new();
 
         void Awake()
         {
@@ -31,8 +37,8 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (!other.TryGetComponent<PlayerController>(out var player)) { return; }   // プレイヤー以外との接触は無視
-            if (!_pressingPlayers.Any())                // 他に誰もスイッチに乗っていない場合
+            if (IsExcludeCollider(other)) { return; }   // 除外する接触なら処理しない
+            if (!_pressingObjects.Any())                // 他に誰もスイッチに乗っていない場合
             {
                 _anim.SetBool(PARAM_PRESS, true);       // スイッチを起動
 
@@ -41,17 +47,21 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
                     wall.Open();                        // 壁を開ける
                 }
             }
-            _pressingPlayers.Add(player);               // 乗っているプレイヤー一覧に追加
+            _pressingObjects.Add(other.gameObject);     // 乗っているオブジェクト一覧に追加
         }
 
         void OnTriggerExit2D(Collider2D other)
         {
-            if (!other.TryGetComponent<PlayerController>(out var player)) { return; }   // プレイヤー以外との接触は無視
-            if (_pressingPlayers.Contains(player))      // 乗っているプレイヤーだった場合（常にtrueと考えられるが）
-            {
-                _pressingPlayers.Remove(player);        // 乗っているプレイヤー一覧から削除
-            }
-            if (!_pressingPlayers.Any())                // スイッチ上に誰もいなくなった場合
+            if (IsExcludeCollider(other)) { return; }   // 除外する接触なら処理しない
+
+            //↓Trial Scene の HashSetテストで，別に要素がなくても例外は投げられないことを確認
+            //if (_pressingObjects.Contains(other.gameObject))    // 乗っているオブジェクトだった場合（常にtrueと考えられるが）
+            //{
+                //_pressingObjects.Remove(other.gameObject);      // 乗っているオブジェクト一覧から削除
+            //}
+            _pressingObjects.Remove(other.gameObject);  // 乗っているオブジェクト一覧から削除
+
+            if (!_pressingObjects.Any())                // スイッチ上に何も無くなった場合
             {
                 _anim.SetBool(PARAM_PRESS, false);      // スイッチをOff
 
@@ -70,6 +80,18 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         {
             Assert.IsNotNull<OpenableWall>(wall);
             _openableWalls.Add(wall);
+        }
+
+        /// <summary>
+        /// 除外する接触かどうかを判定します．
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        private bool IsExcludeCollider(Collider2D other)
+        {
+            return other == null ||                                         // 相手がnullか
+                   other.gameObject == null ||                              // 相手のgameObjectがnullか
+                   ((1 << other.gameObject.layer) & _excludeLayer) != 0;    // 除外レイヤーに属するなら，接触は除外
         }
     }
 }

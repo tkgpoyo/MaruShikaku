@@ -62,6 +62,7 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         /// </summary>
         public void Open()
         {
+            if (!gameObject.activeInHierarchy) { return; }
             if (_coroutine != null)
             {
                 StopCoroutine(_coroutine);
@@ -76,6 +77,7 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         /// </summary>
         public void Close()
         {
+            if (!gameObject.activeInHierarchy) { return; }
             if (_coroutine != null)
             {
                 StopCoroutine(_coroutine);

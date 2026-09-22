@@ -335,6 +335,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Stages.Gimmicks.PressureSwitch
   _openableWalls: []
+  _excludeLayer:
+    serializedVersion: 2
+    m_Bits: 1024
 --- !u!1 &4184824558702348908
 GameObject:
   m_ObjectHideFlags: 0

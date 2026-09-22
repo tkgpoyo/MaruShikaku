@@ -6,6 +6,7 @@ using MaruSikaku.Gameplay.Players;
 using MaruSikaku.Gameplay.Stages.Gimmicks;
 using MaruSikaku.Stage;
 using UnityEngine;
+using UnityEngine.Animations;
 using UnityEngine.Tilemaps;
 
 namespace MaruSikaku.Gameplay
@@ -113,8 +114,7 @@ namespace MaruSikaku.Gameplay
                 _tilemap.SetTile(new Vector3Int(terrain.Pos.x, terrain.Pos.y, 0), _groundTile);
             }
 
-            // プレイヤーの接地判定が参照するレイヤーに合わせる．
-            _groundRoot.layer = LayerMask.NameToLayer("Standable");
+            _groundRoot.layer = LayerMask.NameToLayer(MaruSikakuConsts.GROUND_LAYER_NAME);
             foreach (var contour in BuildGroundContours(groundCells))
             {
                 var edgeCollider = _groundRoot.AddComponent<EdgeCollider2D>();
