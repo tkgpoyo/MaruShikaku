@@ -756,6 +756,8 @@ MonoBehaviour:
   _switchPrefab: {fileID: 2843989903509339647, guid: dd4d7f1fd48614f14988bc106eac9cc5, type: 3}
   _wallPrefab: {fileID: 7472633127795652423, guid: 6ed5dce3ab7bd4e4095b21410ac9a4a0, type: 3}
   _springPrefab: {fileID: 2367988502742811817, guid: 4cb4bdae57f654e1c9b2475d9fd6bac6, type: 3}
+  _maruGoalPrefab: {fileID: 9061132987633776809, guid: 5a74b4c755ca84d2288d6235a9330b53, type: 3}
+  _sikakuGoalPrefab: {fileID: 9019090118329217601, guid: d9f1e874aa1cf4f54bfcd4ed8585a024, type: 3}
 --- !u!4 &1634724980
 Transform:
   m_ObjectHideFlags: 0

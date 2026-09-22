@@ -14,13 +14,14 @@ namespace MaruSikaku.Gameplay
 
         private int _currentIdx = 0;
         private PlayerController[] _players;
+        private PlayerGoal[] _goals;
         public IReadOnlyCollection<PlayerController> Players => _players;
         public PlayerController Current => _players[_currentIdx];
 
         void Start()
         {
             // ステージの構築
-            _loader.LoadStage(Path.Join(Application.dataPath, "Stages/stage1.json"), out _players);
+            _loader.LoadStage(Path.Join(Application.dataPath, "Stages/stage1.json"), out _players, out _goals);
 
             // その他初期化
             for (var i = 0; i < _players.Length; i++)
@@ -33,6 +34,11 @@ namespace MaruSikaku.Gameplay
                 {
                     _players[i].SetInitialActive(false);
                 }
+            }
+            foreach (var goal in _goals)
+            {
+                goal.OnGoalReached += () => { Debug.Log("Goal!"); };
+                goal.OnGoalExited += () => { Debug.Log("Exited"); };
             }
 
             _handler.OnSwitch += Switch;

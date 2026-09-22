@@ -29,6 +29,10 @@ namespace MaruSikaku.Gameplay
         [SerializeField] private GameObject _wallPrefab;
         /// <summary>バネのPrefab</summary>
         [SerializeField] private GameObject _springPrefab;
+        /// <summary>丸キャラクターのゴール地点のPrefab</summary>
+        [SerializeField] private GameObject _maruGoalPrefab;
+        /// <summary>四角キャラクターのゴール地点のPrefab</summary>
+        [SerializeField] private GameObject _sikakuGoalPrefab;
 
         private GameObject _stageRoot;
         private GameObject _playerRoot;
@@ -41,7 +45,12 @@ namespace MaruSikaku.Gameplay
         private GameObject _wallParent;
         private Tilemap _tilemap;
 
-        public void LoadStage(string jsonPath, out PlayerController[] players)
+        private PlayerController _maruController;
+        private PlayerController _sikakuController;
+        private PlayerGoal _maruGoal;
+        private PlayerGoal _sikakuGoal;
+
+        public void LoadStage(string jsonPath, out PlayerController[] players, out PlayerGoal[] goals)
         {
             if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))       // JSONファイルパスが存在しない場合
             {
@@ -50,18 +59,37 @@ namespace MaruSikaku.Gameplay
 
             var json = File.ReadAllText(jsonPath);                              // jsonテキストを取得
             var stageSaveData = JsonUtility.FromJson<StageSaveData>(json);      // ステージ保存情報をロード
+
             // ヒエラルキー構成を構築
             BuildHierarchy();
+
             // キャラクターを初期配置
             var maru = Instantiate(_maruPrefab, GetActualPos(stageSaveData.MaruInitPos), Quaternion.identity, _playerRoot.transform);           // 丸キャラクターの生成
             var sikaku = Instantiate(_sikakuPrefab, GetActualPos(stageSaveData.SikakuInitPos), Quaternion.identity, _playerRoot.transform);     // 四角キャラクターの生成
+            _maruController = maru.GetComponent<PlayerController>();
+            _sikakuController = sikaku.GetComponent<PlayerController>();
             players = new PlayerController[]
             {
-                maru.GetComponent<PlayerController>(),
-                sikaku.GetComponent<PlayerController>(),
+                _maruController,
+                _sikakuController
             };                                                                                              // プレイヤー情報を取得
+
+            // ゴール地点を生成
+            var maruGoal = Instantiate(_maruGoalPrefab, GetActualPos(stageSaveData.MaruGoalPos), Quaternion.identity, _stageRoot.transform);        // 丸キャラクターのゴール地点の生成
+            var sikakuGoal = Instantiate(_sikakuGoalPrefab, GetActualPos(stageSaveData.SikakuGoalPos), Quaternion.identity, _stageRoot.transform);  // 四角キャラクターのゴール地点の生成
+            _maruGoal = maruGoal.GetComponent<PlayerGoal>();
+            _sikakuGoal = sikakuGoal.GetComponent<PlayerGoal>();
+            _maruGoal.Initialize(_maruController);                                                          // ゴール情報に丸プレイヤーを登録
+            _sikakuGoal.Initialize(_sikakuController);                                                      // ゴール情報に四角プレイヤーを登録
+            goals = new PlayerGoal[]
+            {
+                _maruGoal,
+                _sikakuGoal
+            };                                                                                              // ゴール情報を取得
+
             // 地面を生成
             InstantiateGround(stageSaveData);
+
             // ステージオブジェクトを生成
             var stageObjMap = new Dictionary<int, (EStageObjectType, StageObjectSaveData, GameObject)>();   // IDとGameObjectとの対応表
             foreach (var stageObj in stageSaveData.StageObjects)
@@ -69,6 +97,7 @@ namespace MaruSikaku.Gameplay
                 var gameObject = InstantiateStageObject(stageObj);                                          // ステージオブジェクトのGameObjectを取得
                 stageObjMap.Add(stageObj.Id, (stageObj.Type, stageObj, gameObject));                        // IDとGameObjectとの対応表に登録
             }
+
             // ステージオブジェクト間の関係を設定
             BuildStageObjectRelation(stageObjMap);
         }
@@ -250,7 +279,7 @@ namespace MaruSikaku.Gameplay
                     }
 
                     var switchController = switchInfo.obj.GetComponent<PressureSwitch>();       // スイッチのControllerを取得
-                    switchController.RegisterWall(obj.GetComponent<OpenableWall>());   // 壁を登録
+                    switchController.RegisterWall(obj.GetComponent<OpenableWall>());            // 壁を登録
                 }
             }
         }
