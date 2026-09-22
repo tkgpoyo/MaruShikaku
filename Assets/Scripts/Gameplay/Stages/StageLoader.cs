@@ -186,12 +186,24 @@ namespace MaruSikaku.Gameplay
                     var next = vertices[(i + 1) % vertices.Count];
                     if (vertex - previous != next - vertex)
                     {
-                        points.Add(new Vector2(vertex.x, vertex.y));
+                        /* 少しゆとりを持たせるために，若干境界を萎ませる
+                            1. 今の辺(vertex - previous) と，次の辺(next - vertex) の負の法線をそれぞれ取得(左側の法線)
+                            2. 負の法線側に少しずらす
+                         */ 
+                        var currentEdge = vertex - previous;
+                        var nextEdge = next - vertex;
+                        var currentNormal = new Vector2(-currentEdge.y, -currentEdge.x);
+                        var nextNormal = new Vector2(-nextEdge.y, -nextEdge.x);
+                        currentNormal.Normalize();
+                        nextNormal.Normalize();
+                        var offset = (currentNormal + nextNormal) * 0.05f;
+                        points.Add(new Vector2(vertex.x, vertex.y) + offset);
                     }
                 }
                 points.Add(points[0]);
                 contours.Add(points.ToArray());
             }
+
             return contours;
         }
 
