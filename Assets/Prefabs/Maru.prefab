@@ -294,7 +294,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 2
   m_Material: {fileID: 6200000, guid: 267488c249ead4cd5b547326c9c31df7, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
@@ -386,7 +386,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MaruSikaku.Gameplay.Players.Abilities.JumpAbility
   _order: 0
-  _jumpVelocity: 8
+  _jumpVelocity: 12
 --- !u!114 &1002556298896358065
 MonoBehaviour:
   m_ObjectHideFlags: 0
