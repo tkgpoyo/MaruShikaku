@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using MaruSikaku.Gameplay.Players;
 using MaruSikaku.Gameplay.Players.Inputs;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 
 namespace MaruSikaku.Gameplay
@@ -15,13 +17,18 @@ namespace MaruSikaku.Gameplay
         private int _currentIdx = 0;
         private PlayerController[] _players;
         private PlayerGoal[] _goals;
+        private HashSet<PlayerController> _goalPlayers = new();
+        private bool _isGameOver;
+
         public IReadOnlyCollection<PlayerController> Players => _players;
         public PlayerController Current => _players[_currentIdx];
 
         void Start()
         {
+            _isGameOver = false;
+
             // ステージの構築
-            _loader.LoadStage(Path.Join(Application.dataPath, "Stages/stage1.json"), out _players, out _goals);
+            _loader.LoadStage(Path.Join(Application.dataPath, "Stages/stage_sample.json"), out _players, out _goals);
 
             // その他初期化
             for (var i = 0; i < _players.Length; i++)
@@ -37,8 +44,8 @@ namespace MaruSikaku.Gameplay
             }
             foreach (var goal in _goals)
             {
-                goal.OnGoalReached += () => { Debug.Log("Goal!"); };
-                goal.OnGoalExited += () => { Debug.Log("Exited"); };
+                goal.OnGoalReached += OnGoalReached;
+                goal.OnGoalExited += OnGoalExited;
             }
 
             _handler.OnSwitch += Switch;
@@ -54,6 +61,43 @@ namespace MaruSikaku.Gameplay
             _players[_currentIdx].SetActive(true);
 
             _camera.SetTargetPlayer(Current);
+        }
+
+        private void OnGoalReached(PlayerController player)
+        {
+            _goalPlayers.Add(player);
+
+            if (_isGameOver) { return; }
+            if (_goalPlayers.Count == _players.Length)  // 全プレイヤーがゴールに到達した場合
+            {
+                // ゴール演出を再生
+                _isGameOver = true;
+                StartCoroutine(GameOver(true));
+            }
+        }
+
+        private void OnGoalExited(PlayerController player)
+        {
+            _goalPlayers.Remove(player);
+        }
+
+        private IEnumerator GameOver(bool success)
+        {
+            if (success)
+            {
+                var effects = new List<Coroutine>();
+                // 全てのゴールに対して演出を再生
+                foreach (var goal in _goals)
+                {
+                    effects.Add(StartCoroutine(goal.PlayEffect()));
+                }
+                // 全ての演出が終わるまで待機
+                foreach (var effect in effects)
+                {
+                    yield return effect;
+                }
+                // TODO:ゲーム終了表示
+            }
         }
     }
 }

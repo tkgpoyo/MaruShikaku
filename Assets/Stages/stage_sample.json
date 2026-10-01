@@ -5,19 +5,19 @@
     },
     "_maruInitPos": {
         "x": 2,
-        "y": 0
+        "y": 1
     },
     "_sikakuInitPos": {
         "x": 1,
-        "y": 0
+        "y": 1
     },
     "_maruGoalPos": {
-        "x": 8,
-        "y": 0
+        "x": 4,
+        "y": 1
     },
     "_sikakuGoalPos": {
-        "x": 9,
-        "y": 0
+        "x": 3,
+        "y": 1
     },
     "_terrainCells": [
         {
@@ -113,14 +113,14 @@
         },
         {
             "_pos": {
-                "x": 6,
+                "x": 1,
                 "y": 0
             },
             "_type": 1
         },
         {
             "_pos": {
-                "x": 7,
+                "x": 2,
                 "y": 0
             },
             "_type": 1

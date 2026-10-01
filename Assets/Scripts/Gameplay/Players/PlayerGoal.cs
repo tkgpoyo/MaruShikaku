@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using MaruSikaku.Gameplay.Players.Visuals;
 using UnityEngine;
 
@@ -9,24 +10,26 @@ namespace MaruSikaku.Gameplay.Players
     {
         /// <summary>ゴールの表示を制御するインスタンス</summary>
         [SerializeField] private GoalVisual _visual;
+        /// <summary>ゴール時のエフェクト</summary>
+        [SerializeField] private ParticleSystem _goalEffect;
 
         /// <summary>ゴール判定するプレイヤー</summary>
-        private PlayerController _targetPlayer;
+        public PlayerController Target { get; private set; }
 
         /// <summary>ゴール地点にいるかどうか</summary>
         public bool IsGoal { get; private set; }
 
         /// <summary>ゴール到達時のイベント</summary>
-        public event Action OnGoalReached;
+        public event Action<PlayerController> OnGoalReached;
         /// <summary>ゴールから離れた時のイベント</summary>
-        public event Action OnGoalExited;
+        public event Action<PlayerController> OnGoalExited;
 
         void OnTriggerEnter2D(Collider2D collision)
         {
             if (!IsCollideWithTarget(collision)) { return; }    // 指定のプレイヤーとの接触でない場合は，処理しない
             IsGoal = true;
             _visual.LitGoal();
-            OnGoalReached?.Invoke();
+            OnGoalReached?.Invoke(Target);
         }
 
         void OnTriggerExit2D(Collider2D collision)
@@ -34,12 +37,27 @@ namespace MaruSikaku.Gameplay.Players
             if (!IsCollideWithTarget(collision)) { return; }
             IsGoal = false;
             _visual.UnlitGoal();
-            OnGoalExited?.Invoke();
+            OnGoalExited?.Invoke(Target);
         }
 
         public void Initialize(PlayerController player)
         {
-            _targetPlayer = player;
+            Target = player;
+        }
+
+        /// <summary>
+        /// ゴール演出を再生します．
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator PlayEffect()
+        {
+            _goalEffect.Play();             // ゴール演出の再生
+            yield return null;              // 1フレーム待つ(エフェクトが再生されるのを保証)
+
+            while (_goalEffect.isPlaying)   // エフェクトが終了するまで
+            {
+                yield return null;          // 1フレーム待つ
+            }
         }
 
         /// <summary>
@@ -49,9 +67,9 @@ namespace MaruSikaku.Gameplay.Players
         /// <returns></returns>
         private bool IsCollideWithTarget(Collider2D collision)
         {
-            if (_targetPlayer == null ||                                        // プレイヤーが設定されていないか
+            if (Target == null ||                                               // プレイヤーが設定されていないか
                 !collision.TryGetComponent<PlayerController>(out var player) || // 接触相手がPlayerControllerを持っていないか
-                !ReferenceEquals(player, _targetPlayer))                        // 指定のプレイヤーとの接触でない場合
+                !ReferenceEquals(player, Target))                               // 指定のプレイヤーとの接触でない場合
             {
                 return false;
             }
