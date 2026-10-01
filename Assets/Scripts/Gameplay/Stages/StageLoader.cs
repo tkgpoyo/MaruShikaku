@@ -5,6 +5,7 @@ using System.Linq;
 using MaruSikaku.Gameplay.Players;
 using MaruSikaku.Gameplay.Stages.Gimmicks;
 using MaruSikaku.Stage;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Tilemaps;
@@ -50,6 +51,8 @@ namespace MaruSikaku.Gameplay
         private PlayerGoal _maruGoal;
         private PlayerGoal _sikakuGoal;
 
+        public Rect StageBounds { get; private set; }
+
         public void LoadStage(string jsonPath, out PlayerController[] players, out PlayerGoal[] goals)
         {
             if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))       // JSONファイルパスが存在しない場合
@@ -86,6 +89,9 @@ namespace MaruSikaku.Gameplay
                 _maruGoal,
                 _sikakuGoal
             };                                                                                              // ゴール情報を取得
+
+            // ステージの外枠を生成
+            BuildStageOutline(stageSaveData);
 
             // 地面を生成
             InstantiateGround(stageSaveData);
@@ -130,6 +136,12 @@ namespace MaruSikaku.Gameplay
             _groundRoot.AddComponent<TilemapRenderer>();            // Rendererをアタッチ
             _fragileParent = new GameObject("Fragile");             // 壊れるブロックの親オブジェクト
             _fragileParent.transform.parent = _stageRoot.transform; // ステージの親オブジェクトの子オブジェクトとする
+        }
+
+        private void BuildStageOutline(StageSaveData saveData)
+        {
+            int xMin = -1, xMax = saveData.Size.x, yMin = -1, yMax = saveData.Size.y;
+            StageBounds = Rect.MinMaxRect(xMin, yMin, xMax, yMax);
         }
 
         private void InstantiateGround(StageSaveData stageData)

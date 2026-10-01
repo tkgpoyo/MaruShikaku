@@ -52,6 +52,19 @@ namespace MaruSikaku.Gameplay
             _camera.Initialize(Current);
         }
 
+        void Update()
+        {
+            if (_isGameOver || _players == null) { return; }
+
+            foreach (var player in _players)
+            {
+                if (_loader.StageBounds.Contains(player.transform.position)) { continue; }
+
+                StartCoroutine(GameOver(false));
+                return;
+            }
+        }
+
         private void Switch()
         {
             if (!Current.CanSwitch) { return; }
@@ -83,7 +96,7 @@ namespace MaruSikaku.Gameplay
 
         private IEnumerator GameOver(bool success)
         {
-            if (success)
+            if (success)    // 成功時
             {
                 var effects = new List<Coroutine>();
                 // 全てのゴールに対して演出を再生
@@ -97,6 +110,10 @@ namespace MaruSikaku.Gameplay
                     yield return effect;
                 }
                 // TODO:ゲーム終了表示
+            }
+            else            // 失敗時
+            {
+                Debug.Log("failed");
             }
         }
     }
