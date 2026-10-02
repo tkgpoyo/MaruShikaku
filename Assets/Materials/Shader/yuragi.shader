@@ -155,6 +155,7 @@ SubShader {
 
 		    float4 textures			: TEXCOORD5;
 			float2 relativePos      : TEXCOORD6;
+			float2 textUV			: TEXCOORD7;
 		};
 
 		// Used by Unity internally to handle Texture Tiling and Offset.
@@ -163,6 +164,9 @@ SubShader {
 		float _UIMaskSoftnessX;
         float _UIMaskSoftnessY;
         int _UIVertexColorAlwaysGammaSpace;
+
+		sampler2D _HideTex;
+		float4 _TextRect;
 
 		pixel_t VertShader(vertex_t input)
 		{
@@ -238,8 +242,10 @@ SubShader {
 			output.texcoord2 = float4(input.texcoord0 + bOffset, bScale, bBias);
 			output.underlayColor =	underlayColor;
 			#endif
+
 			output.textures = float4(faceUV, outlineUV);
 			output.relativePos = input.texcoord1;
+			output.textUV = (input.position.xy - _TextRect.xy) / max(_TextRect.zw, float2(0.0001, 0.0001));
 
 			return output;
 		}
@@ -254,6 +260,9 @@ SubShader {
 			float2 amplitudeUV = float2(0.75 / _TextureWidth, 0.25 / _TextureHeight);
 			float2 atlasOffset = sin(phase) * amplitudeUV * yuragiWeight;
 			float c = tex2D(_MainTex, clamp(input.atlas + atlasOffset, float2(0, 0), float2(1, 1))).a;
+
+			float mask = tex2D(_HideTex, input.textUV).a;
+			clip(mask - 0.5);
 
 		    #ifndef UNDERLAY_ON
 			clip(c - input.param.x);
