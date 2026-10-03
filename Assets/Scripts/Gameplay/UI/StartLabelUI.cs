@@ -37,72 +37,58 @@ public class StartLabelUI : TextMeshProUGUI
 
         SetDefaultHideTexture();
 
-        var path = new Vector2[_path.Length];
-        for (int i = 0; i < path.Length; i++)
-        {
-            path[i] = new Vector2(_path[i].x * HIDE_TEX_WIDTH, _path[i].y * HIDE_TEX_HEIGHT);
-        }
-
-        var totalDistance = 0f;
-        var distances = new float[path.Length - 1];
-        for (int i = 0; i < path.Length - 1; i++)
-        {
-            var distance = Vector2.Distance(path[i], path[i+1]);
-            totalDistance += distance;
-            distances[i] = distance;
-        }
-
-        var times = new float[path.Length - 1];
-        var secPerDistance = _pathTime / Mathf.Max(totalDistance, 0.001f);
-        for (int i = 0; i < times.Length; i++)
-        {
-            times[i] = distances[i] * secPerDistance;
-        }
-
-        var elapsed = 0f;
-        var elapsedInPath = 0f;
-        var idx = 0;
-        var lastIdx = path.Length - 2;
-        var radius = _radius * Mathf.Min(HIDE_TEX_WIDTH, HIDE_TEX_HEIGHT);
-        while (elapsed < _pathTime)
-        {
-            if (idx < lastIdx && times[idx] <= elapsedInPath)
-            {
-                elapsedInPath -= times[idx];
-                idx++;
-            }
-            var position = Vector2.Lerp(path[idx], path[idx + 1], elapsedInPath / Mathf.Max(times[idx], 0.001f));
-            Paint(position, radius, false);
-            yield return null;
-            elapsed += Time.deltaTime;
-            elapsedInPath += Time.deltaTime;
-        }
-        Paint(path.Last(), radius, false);
-
+        yield return PaintPath(false);
         yield return new WaitForSeconds(_breakTime);
-
-        elapsed = 0f;
-        elapsedInPath = 0f;
-        idx = 0;
-        lastIdx = path.Length - 2;
-        while (elapsed < _pathTime)
-        {
-            if (idx < lastIdx && times[idx] <= elapsedInPath)
-            {
-                elapsedInPath -= times[idx];
-                idx++;
-            }
-            var position = Vector2.Lerp(path[idx], path[idx + 1], elapsedInPath / Mathf.Max(times[idx], 0.001f));
-            Paint(position, radius, true);
-            yield return null;
-            elapsed += Time.deltaTime;
-            elapsedInPath += Time.deltaTime;
-        }
-        Paint(path.Last(), radius, true);
+        yield return PaintPath(true);
 
         SetDefaultHideTexture();
 
         _isAnimating = false;
+
+        IEnumerator PaintPath(bool erase)
+        {
+            var path = new Vector2[_path.Length];
+            for (int i = 0; i < path.Length; i++)
+            {
+                path[i] = new Vector2(_path[i].x * HIDE_TEX_WIDTH, _path[i].y * HIDE_TEX_HEIGHT);
+            }
+
+            var totalDistance = 0f;
+            var distances = new float[path.Length - 1];
+            for (int i = 0; i < path.Length - 1; i++)
+            {
+                var distance = Vector2.Distance(path[i], path[i+1]);
+                totalDistance += distance;
+                distances[i] = distance;
+            }
+
+            var times = new float[path.Length - 1];
+            var secPerDistance = _pathTime / Mathf.Max(totalDistance, 0.001f);
+            for (int i = 0; i < times.Length; i++)
+            {
+                times[i] = distances[i] * secPerDistance;
+            }
+
+            var elapsed = 0f;
+            var elapsedInPath = 0f;
+            var idx = 0;
+            var lastIdx = path.Length - 2;
+            var radius = _radius * Mathf.Min(HIDE_TEX_WIDTH, HIDE_TEX_HEIGHT);
+            while (elapsed < _pathTime)
+            {
+                if (idx < lastIdx && times[idx] <= elapsedInPath)
+                {
+                    elapsedInPath -= times[idx];
+                    idx++;
+                }
+                var position = Vector2.Lerp(path[idx], path[idx + 1], elapsedInPath / Mathf.Max(times[idx], 0.001f));
+                Paint(position, radius, erase);
+                yield return null;
+                elapsed += Time.deltaTime;
+                elapsedInPath += Time.deltaTime;
+            }
+            Paint(path.Last(), radius, erase);
+        }
     }
 
     private void Paint(Vector2 center, float radius, bool erase)
