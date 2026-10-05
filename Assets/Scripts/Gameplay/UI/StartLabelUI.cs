@@ -17,20 +17,20 @@ public class StartLabelUI : TextMeshProUGUI
 
     private Texture2D _hideTex;
     private bool _isAnimating = false;
+    private bool _initialized = false;
 
     protected override void Start()
     {
         base.Start();
-
-        ForceMeshUpdate();
-        SetDefaultHideTexture();
-        var bounds = GetTextBounds(true);
-        fontMaterial.SetTexture("_HideTex", _hideTex);
-        fontMaterial.SetVector("_TextRect", new Vector4(bounds.min.x, bounds.min.y, bounds.size.x, bounds.size.y));
+        EnsureInitialized();
     }
 
     public IEnumerator Play()
     {
+        if (!isActiveAndEnabled) { yield break; }
+
+        EnsureInitialized();
+
         if (_path.Length <= 1) { yield break; }
         if (_isAnimating) { yield break; }
         _isAnimating = true;
@@ -114,6 +114,19 @@ public class StartLabelUI : TextMeshProUGUI
             _hideTex = new Texture2D(HIDE_TEX_WIDTH, HIDE_TEX_HEIGHT);
         }
         _hideTex.CopyPixels(DEFAULT_HIDE_TEXTURE);
+    }
+
+    private void EnsureInitialized()
+    {
+        if (_initialized) { return; }
+
+        ForceMeshUpdate();
+        SetDefaultHideTexture();
+        var bounds = GetTextBounds(true);
+        fontMaterial.SetTexture("_HideTex", _hideTex);
+        fontMaterial.SetVector("_TextRect", new Vector4(bounds.min.x, bounds.min.y, bounds.size.x, bounds.size.y));
+
+        _initialized = true;
     }
 
     private static Texture2D DefaultHideTexture()

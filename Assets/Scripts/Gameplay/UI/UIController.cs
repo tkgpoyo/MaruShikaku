@@ -1,27 +1,29 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIController : MonoBehaviour
 {
-    [SerializeField] private StartLabelUI _startLabelUI;
-
-    private bool _a = false;
-    private float _e = 0f;
+    [Header("開始時UI関連")]
+    [SerializeField] private GameObject _startParent;
 
     void Start()
     {
+        Initialize();
     }
 
-    void Update()
+    public IEnumerator PlayStartUI()
     {
-        _e += Time.deltaTime;
-        if (_e > 10)
-        {
-            _e = 0;
-            _a = false;
-        }
-        if (_a) return;
-        _a = true;
-        StartCoroutine(_startLabelUI.Play());
+        _startParent.SetActive(true);
+        var startLabel = _startParent.GetComponentInChildren<StartLabelUI>();
+        yield return StartCoroutine(startLabel.Play());     // 開始アニメーションを再生
+        yield return new WaitForSeconds(0.25f);             // 少しだけ背景を残す
+        _startParent.SetActive(false);
+    }
+
+    private void Initialize()
+    {
+        _startParent.SetActive(false);
     }
 }

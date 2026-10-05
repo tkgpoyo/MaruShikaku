@@ -13,6 +13,7 @@ namespace MaruSikaku.Gameplay
         [SerializeField] private StageLoader _loader;
         [SerializeField] private PlayerInputHandler _handler;
         [SerializeField] private CameraChaseController _camera;
+        [SerializeField] private UIController _UI;
 
         private int _currentIdx = 0;
         private PlayerController[] _players;
@@ -25,12 +26,31 @@ namespace MaruSikaku.Gameplay
 
         void Start()
         {
+            StartCoroutine(StartGame());
+        }
+
+        void Update()
+        {
+            if (_isGameOver || _players == null) { return; }
+
+            foreach (var player in _players)
+            {
+                if (_loader.StageBounds.Contains(player.transform.position)) { continue; }
+
+                StartCoroutine(GameOver(false));
+                return;
+            }
+        }
+
+        /// <summary>
+        /// ゲームを開始します．
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerator StartGame()
+        {
+            // ゲーム開始にあたる初期化
             _isGameOver = false;
-
-            // ステージの構築
             _loader.LoadStage(Path.Join(Application.dataPath, "Stages/stage_sample.json"), out _players, out _goals);
-
-            // その他初期化
             for (var i = 0; i < _players.Length; i++)
             {
                 if (i == _currentIdx)
@@ -47,22 +67,11 @@ namespace MaruSikaku.Gameplay
                 goal.OnGoalReached += OnGoalReached;
                 goal.OnGoalExited += OnGoalExited;
             }
-
             _handler.OnSwitch += Switch;
             _camera.Initialize(Current);
-        }
 
-        void Update()
-        {
-            if (_isGameOver || _players == null) { return; }
-
-            foreach (var player in _players)
-            {
-                if (_loader.StageBounds.Contains(player.transform.position)) { continue; }
-
-                StartCoroutine(GameOver(false));
-                return;
-            }
+            // 開始アニメーションの再生
+            yield return _UI.PlayStartUI();
         }
 
         private void Switch()
