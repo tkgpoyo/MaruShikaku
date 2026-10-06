@@ -18,6 +18,7 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
     }
 
     [RequireComponent(typeof(BoxCollider2D))]
+    [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(SpriteRenderer))]
     public class PressableBlock : MonoBehaviour
     {
@@ -37,6 +38,7 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         private HashSet<Collider2D> _groundColliders = new();
         private bool _isGroundBelow => _groundColliders.Count > 0;
         private SpriteRenderer _renderer;
+        private Rigidbody2D _rb;
 
         public Vector2Int Size
         {
@@ -52,6 +54,25 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         {
             _collider = GetComponent<BoxCollider2D>();
             _renderer = GetComponent<SpriteRenderer>();
+            _rb = GetComponent<Rigidbody2D>();
+        }
+
+        void FixedUpdate()
+        {
+            // 空中に存在する時，下に壊せるブロックがあれば先読みして壊す
+            if (!_isGroundBelow)
+            {
+                var bounds = _collider.bounds;
+                var distance = Mathf.Max(0f, -_rb.linearVelocityY) * Time.fixedDeltaTime + 0.02f;
+                var vecPerFrame = _rb.linearVelocity * Time.fixedDeltaTime;     // 次のフレームまでに移動する分のベクトル
+                var hits = Physics2D.BoxCastAll(bounds.center, bounds.size, 0f, Vector2.down, distance);
+                foreach (var hit in hits)
+                {
+                    if (hit.collider == null) { continue; }
+                    if (!hit.collider.TryGetComponent<FragileBlock>(out var fragile)) { continue; }
+                    fragile.Break();
+                }
+            }
         }
 
         void OnDisable()
@@ -70,10 +91,12 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
                 _groundColliders.Add(collision.collider);
             }
 
-            if (!collision.gameObject.TryGetComponent<FragileBlock>(out var block)) { return; }     // 壊れるブロック以外は無視
-            if (!IsBelowCollision(collision)) { return; }                                           // 下向きの接触でない場合は無視
+            //// 壊せるブロックが落下中に存在すれば壊す
+            //if (_isGroundBelow) { return; }                                                         // 接地中なら無視
+            //if (!collision.gameObject.TryGetComponent<FragileBlock>(out var block)) { return; }     // 壊れるブロック以外は無視
+            //if (!IsBelowCollision(collision)) { return; }                                           // 下向きの接触でない場合は無視
 
-            block.Break();      // ブロックを壊す
+            //block.Break();      // ブロックを壊す
         }
 
         void OnCollisionStay2D(Collision2D collision)
@@ -141,6 +164,8 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
 
                 if (Mathf.Approximately(currentPos.x, targetX))         // 目標に到達したら
                 {
+                    currentPos.x = targetX;
+                    transform.position = currentPos;
                     break;                                              // 処理を終了
                 }
 
@@ -210,7 +235,8 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
 
         private void SetSize(Vector2Int size)
         {
-            const float DELTA = 0.005f;
+            const float WIDTH_MARGIN = 0.15f;
+            const float HEIGHT_MARGIN = 0.01f;
 #if UNITY_EDITOR
             if (_renderer == null)
             {
@@ -222,7 +248,7 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
             }
 #endif
             _renderer.size = new(size.x, size.y);
-            _collider.size = new(size.x - DELTA, size.y - DELTA);
+            _collider.size = new(size.x - WIDTH_MARGIN, size.y - HEIGHT_MARGIN);
         }
 
 #if UNITY_EDITOR
