@@ -1,7 +1,13 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.UIElements.Experimental;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace MaruSikaku.Gameplay.Stages.Gimmicks
 {
@@ -10,7 +16,9 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         Right,
         Left
     }
-    [RequireComponent(typeof(Collider2D))]
+
+    [RequireComponent(typeof(BoxCollider2D))]
+    [RequireComponent(typeof(SpriteRenderer))]
     public class PressableBlock : MonoBehaviour
     {
         /// <summary>ブロック前方に障害物があるかどうかを確認する際の余白</summary>
@@ -22,21 +30,70 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         [SerializeField] private LayerMask _obstacleLayer;
         /// <summary>動かす距離</summary>
         [SerializeField] private float _moveDistance = 1f;
+        [SerializeField] private Vector2Int _size = Vector2Int.one;
 
-        private Collider2D _collider;
+        private BoxCollider2D _collider;
         private bool _isMoving = false;
+        private HashSet<Collider2D> _groundColliders = new();
+        private bool _isGroundBelow => _groundColliders.Count > 0;
+        private SpriteRenderer _renderer;
+
+        public Vector2Int Size
+        {
+            get => _size;
+            set
+            {
+                _size = value;
+                SetSize(_size);
+            }
+        }
 
         void Awake()
         {
-            _collider = GetComponent<Collider2D>();
+            _collider = GetComponent<BoxCollider2D>();
+            _renderer = GetComponent<SpriteRenderer>();
+        }
+
+        void OnDisable()
+        {
+            StopAllCoroutines();
+            _isMoving = false;
+            _groundColliders.Clear();
         }
 
         void OnCollisionEnter2D(Collision2D collision)
         {
+            // 下に地面があるかどうか確認
+            if (collision.gameObject.layer == LayerMask.NameToLayer(MaruSikakuConsts.GROUND_LAYER_NAME) && 
+                IsBelowCollision(collision))
+            {
+                _groundColliders.Add(collision.collider);
+            }
+
             if (!collision.gameObject.TryGetComponent<FragileBlock>(out var block)) { return; }     // 壊れるブロック以外は無視
             if (!IsBelowCollision(collision)) { return; }                                           // 下向きの接触でない場合は無視
 
             block.Break();      // ブロックを壊す
+        }
+
+        void OnCollisionStay2D(Collision2D collision)
+        {
+            if (collision.gameObject.layer == LayerMask.NameToLayer(MaruSikakuConsts.GROUND_LAYER_NAME))
+            {
+                if (IsBelowCollision(collision))
+                {
+                    _groundColliders.Add(collision.collider);
+                }
+                else
+                {
+                    _groundColliders.Remove(collision.collider);
+                }
+            }
+        }
+
+        void OnCollisionExit2D(Collision2D collision)
+        {
+            _groundColliders.Remove(collision.collider);
         }
 
         /// <summary>
@@ -67,27 +124,31 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
         {
             _isMoving = true;
 
-            var currentPos = (Vector2)transform.position;               // 現在の位置を取得
-            var targetPos = new Vector2(targetX, currentPos.y);         // 目標位置
-            while (!Mathf.Approximately(currentPos.x, targetPos.x))     // 目標位置に達するまで
+            while (_isGroundBelow)                                      // 地面から離れるまで
             {
-                var nextPos = Vector2.MoveTowards(
-                    currentPos,
-                    targetPos,
+                var currentPos = transform.position;
+                var nextX = Mathf.MoveTowards(
+                    currentPos.x,
+                    targetX,
                     _speed * Time.fixedDeltaTime
-                );                                                      // 現在の位置を更新
-                var moveVec = nextPos - currentPos;                     // 移動方向
+                );                                                      // 次のX座標
+                var moveVec = new Vector2(nextX - currentPos.x, 0f);    // 移動方向
                 if (!CanMove(moveVec.normalized, moveVec.magnitude))    // 動かせない場合
                 {
                     break;                                              // 移動を終了
                 }
-                currentPos = nextPos;
+                currentPos.x = nextX;                                   // X座標を更新
+
+                if (Mathf.Approximately(currentPos.x, targetX))         // 目標に到達したら
+                {
+                    break;                                              // 処理を終了
+                }
+
                 transform.position = currentPos;                        // 位置を更新
 
                 yield return new WaitForFixedUpdate();                  // 1フレーム待つ
             }
 
-            transform.position = currentPos;                            // 最終位置を目標位置に揃える
             _isMoving = false;
         }
 
@@ -146,5 +207,37 @@ namespace MaruSikaku.Gameplay.Stages.Gimmicks
 
             return true;
         }
+
+        private void SetSize(Vector2Int size)
+        {
+            const float DELTA = 0.005f;
+#if UNITY_EDITOR
+            if (_renderer == null)
+            {
+                _renderer = GetComponent<SpriteRenderer>();
+            }
+            if (_collider == null)
+            {
+                _collider = GetComponent<BoxCollider2D>();
+            }
+#endif
+            _renderer.size = new(size.x, size.y);
+            _collider.size = new(size.x - DELTA, size.y - DELTA);
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (!Application.isPlaying)
+            {
+                // スケールによってシーン上の大きさを変更
+                EditorApplication.delayCall += () =>
+                {
+                    if (this == null) { return; }
+                    SetSize(_size);
+                };
+            }
+        }
+#endif
     }
 }
