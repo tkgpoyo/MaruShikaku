@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using MaruSikaku.Stage;
+using UnityEngine;
 
 namespace MaruSikaku.Editor.Data
 {
@@ -51,8 +52,20 @@ namespace MaruSikaku.Editor.Data
                     wallObject.Id,
                     wallObject.Pos,
                     wallObject.Type,
+                    Vector2Int.zero,
                     wallObject.SwitchId,
                     wallObject.YLength
+                );
+            }
+            else if (stageObject is MovableObjectDisplayData movableObject)
+            {
+                return new(
+                    movableObject.Id,
+                    movableObject.Pos,
+                    movableObject.Type,
+                    movableObject.Size,
+                    -1,
+                    -1
                 );
             }
             else
@@ -61,6 +74,7 @@ namespace MaruSikaku.Editor.Data
                     stageObject.Id,
                     stageObject.Pos,
                     stageObject.Type,
+                    Vector2Int.zero,
                     -1,
                     -1
                 );
@@ -79,7 +93,8 @@ namespace MaruSikaku.Editor.Data
                 case EStageObjectType.Movable:
                     return new MovableObjectDisplayData(
                         objectSaveData.Id,
-                        objectSaveData.Pos
+                        objectSaveData.Pos,
+                        objectSaveData.Size
                     );
                 case EStageObjectType.Spring:
                     return new SpringObjectDisplayData(

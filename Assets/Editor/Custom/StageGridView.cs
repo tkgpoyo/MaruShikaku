@@ -142,7 +142,7 @@ namespace MaruSikaku.Editor.Custom
                 {
                     EStageEditMode.Spring => new SpringObjectDisplayData(GetNextId(), pos),
                     EStageEditMode.Fragile => new FragileObjectDisplayData(GetNextId(), pos),
-                    EStageEditMode.Movable => new MovableObjectDisplayData(GetNextId(), pos),
+                    EStageEditMode.Movable => new MovableObjectDisplayData(GetNextId(), pos, Vector2Int.one),
                     EStageEditMode.Switch => new SwitchObjectDisplayData(GetNextId(), pos),
                     EStageEditMode.Wall => new WallObjectDisplayData(GetNextId(), pos, -1, 1),      // スイッチID未登録，壁の長さは1で初期化
                     _ => throw new NotImplementedException($"{mode}は未対応です．")
@@ -369,10 +369,15 @@ namespace MaruSikaku.Editor.Custom
                     painter.ClosePath();
                     break;
                 case EStageObjectType.Movable:
+                    var movableObj = stageObject as MovableObjectDisplayData;   // 動くブロックオブジェクトを取得
                     painter.BeginPath();
                     painter.fillColor = Color.darkGreen;
                     painter.strokeColor = Color.black;
-                    painter.Rect(CellToRect(stageObject.Pos));
+                    painter.MoveTo(CellToPixel(movableObj.Pos));
+                    painter.LineTo(CellToPixel(movableObj.Pos, x: movableObj.Size.x));
+                    painter.LineTo(CellToPixel(movableObj.Pos, x: movableObj.Size.x, y: movableObj.Size.y));
+                    painter.LineTo(CellToPixel(movableObj.Pos, y: movableObj.Size.y));
+                    painter.LineTo(CellToPixel(movableObj.Pos));
                     painter.Fill();
                     painter.Stroke();
                     break;

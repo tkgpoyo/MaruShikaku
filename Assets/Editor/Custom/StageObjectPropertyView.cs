@@ -133,6 +133,9 @@ namespace MaruSikaku.Editor.Custom
                 case EStageObjectType.Wall:
                     BuildWallFields((WallObjectDisplayData)stageObject);
                     break;
+                case EStageObjectType.Movable:
+                    BuildMovableFields((MovableObjectDisplayData)stageObject);
+                    break;
             }
         }
 
@@ -163,6 +166,23 @@ namespace MaruSikaku.Editor.Custom
             lengthField.RegisterValueChangedCallback(onLengthChanged);
             _fieldEventUnbinders.Add(() => lengthField.UnregisterValueChangedCallback(onLengthChanged));
             Add(lengthField);
+        }
+
+        private void BuildMovableFields(MovableObjectDisplayData movable)
+        {
+            var sizeField = new Vector2IntField("Size");
+            sizeField.SetValueWithoutNotify(movable.Size);
+            sizeField.isDelayed = true;
+            EventCallback<ChangeEvent<Vector2Int>> onSizeChanged = evt =>
+            {
+                if (!StageData.TryChangeMovableSize(movable, evt.newValue))
+                {
+                    sizeField.SetValueWithoutNotify(movable.Size);
+                }
+            };
+            sizeField.RegisterValueChangedCallback(onSizeChanged);
+            _fieldEventUnbinders.Add(() => sizeField.UnregisterValueChangedCallback(onSizeChanged));
+            Add(sizeField);
         }
 
         private void UnbindCurrentObject()

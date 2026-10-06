@@ -356,6 +356,24 @@ namespace MaruSikaku.Editor.Data
         }
 
         /// <summary>
+        /// 指定のサイズに動くブロックオブジェクトが設定可能かを判定し，設定可能ならばその長さに設定します．
+        /// </summary>
+        /// <param name="movable">動くブロックオブジェクト</param>
+        /// <param name="size">ブロックのサイズ</param>
+        /// <returns>ブロックのサイズを設定可能か</returns>
+        public bool TryChangeMovableSize(MovableObjectDisplayData movable, Vector2Int size)
+        {
+            if (size.x < 1 || size.y < 1) { return false; }                     // サイズが0以下なら不適切
+            if (_stageObjects.Contains(movable) &&                              // 指定の壁オブジェクトが登録されていて
+                CanPlaceRegion(movable.GetRegionForSize(size), movable))        // サイズを変更できるなら
+            {
+                movable.Size = size;                                            // サイズを変える
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// 指定の長さに壁オブジェクトが設定可能かを判定し，設定可能ならばその長さに設定します．
         /// </summary>
         /// <param name="wall">壁オブジェクト</param>

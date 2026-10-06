@@ -81,10 +81,7 @@ namespace MaruSikaku.Stage
         /// 占有するセルを列挙します．
         /// </summary>
         /// <returns>領域のセル一覧</returns>
-        protected virtual IEnumerable<Vector2Int> EnumerateRegionCells()
-        {
-            yield return Pos;
-        }
+        protected abstract IEnumerable<Vector2Int> EnumerateRegionCells();
 
         /// <summary>
         /// 領域のスナップショットを作成します．
@@ -112,12 +109,7 @@ namespace MaruSikaku.Stage
         /// </summary>
         /// <param name="pos">確認する位置</param>
         /// <returns>位置に対する占有領域</returns>
-        public virtual IReadOnlyCollection<Vector2Int> GetRegionAt(Vector2Int pos)
-        {
-            var region = new List<Vector2Int>();
-            region.Add(pos);
-            return region;
-        }
+        public abstract IReadOnlyCollection<Vector2Int> GetRegionAt(Vector2Int pos);
 
         /// <summary>
         /// 変更通知を行います．
@@ -145,6 +137,10 @@ namespace MaruSikaku.Stage
         public EStageObjectType Type => _type;
 
         [SerializeField]
+        private Vector2Int _size = Vector2Int.zero;
+        public Vector2Int Size => _size;
+
+        [SerializeField]
         private int _switchId = -1;
         public int SwitchId => _switchId;
 
@@ -152,11 +148,12 @@ namespace MaruSikaku.Stage
         private int _yLength = -1;
         public int YLength => _yLength;
 
-        public StageObjectSaveData(int id, Vector2Int pos, EStageObjectType type, int switchId, int yLength)
+        public StageObjectSaveData(int id, Vector2Int pos, EStageObjectType type, Vector2Int size, int switchId, int yLength)
         {
             _id = id;
             _pos = pos;
             _type = type;
+            _size = size;
             _switchId = switchId;
             _yLength = yLength;
         }
@@ -168,6 +165,16 @@ namespace MaruSikaku.Stage
         public SpringObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
+
+        protected override IEnumerable<Vector2Int> EnumerateRegionCells()
+        {
+            yield return Pos;
+        }
+
+        public override IReadOnlyCollection<Vector2Int> GetRegionAt(Vector2Int pos)
+        {
+            return new List<Vector2Int>() { pos };
+        }
     }
 
     public class FragileObjectDisplayData : StageObjectDisplayData
@@ -176,13 +183,72 @@ namespace MaruSikaku.Stage
         public FragileObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
         }
+
+        protected override IEnumerable<Vector2Int> EnumerateRegionCells()
+        {
+            yield return Pos;
+        }
+        public override IReadOnlyCollection<Vector2Int> GetRegionAt(Vector2Int pos)
+        {
+            return new List<Vector2Int>() { pos };
+        }
     }
 
     public class MovableObjectDisplayData : StageObjectDisplayData
     {
-        public override EStageObjectType Type => EStageObjectType.Movable;
-        public MovableObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
+        [CreateProperty]
+        public Vector2Int Size
         {
+            get => _size;
+            set
+            {
+                if (_size == value) { return; }
+                _size = value;
+                UpdateRegion();
+                Notify();
+            }
+        }
+        private Vector2Int _size;
+
+        public override EStageObjectType Type => EStageObjectType.Movable;
+        public MovableObjectDisplayData(int id, Vector2Int pos, Vector2Int size, bool isDeleted = false) : base(id, pos, isDeleted)
+        {
+            Size = size;
+        }
+
+        protected override IEnumerable<Vector2Int> EnumerateRegionCells()
+        {
+            for (int y = 0; y < Size.y; y++)
+            {
+                for (int x = 0; x < Size.x; x++)
+                {
+                    yield return new Vector2Int(Pos.x + x, Pos.y + y);
+                }
+            }
+        }
+        public override IReadOnlyCollection<Vector2Int> GetRegionAt(Vector2Int pos)
+        {
+            var region = new List<Vector2Int>();
+            for (int y = 0; y < Size.y; y++)
+            {
+                for (int x = 0; x < Size.x; x++)
+                {
+                    region.Add(new(pos.x + x, pos.y + y));
+                }
+            }
+            return region;
+        }
+        public IReadOnlyCollection<Vector2Int> GetRegionForSize(Vector2Int size)
+        {
+            var region = new List<Vector2Int>();
+            for (int y = 0; y < size.y; y++)
+            {
+                for (int x = 0; x < size.x; x++)
+                {
+                    region.Add(new(Pos.x + x, Pos.y + y));
+                }
+            }
+            return region;
         }
     }
 
@@ -191,6 +257,15 @@ namespace MaruSikaku.Stage
         public override EStageObjectType Type => EStageObjectType.Switch;
         public SwitchObjectDisplayData(int id, Vector2Int pos, bool isDeleted = false) : base(id, pos, isDeleted)
         {
+        }
+
+        protected override IEnumerable<Vector2Int> EnumerateRegionCells()
+        {
+            yield return Pos;
+        }
+        public override IReadOnlyCollection<Vector2Int> GetRegionAt(Vector2Int pos)
+        {
+            return new List<Vector2Int>() { pos };
         }
     }
 
