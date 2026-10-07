@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using MaruSikaku.Gameplay.Players;
@@ -38,6 +39,7 @@ namespace MaruSikaku.Gameplay
         private GameObject _stageRoot;
         private GameObject _playerRoot;
         private GameObject _gridRoot;
+        private GameObject _outerWallRoot;
         private GameObject _groundRoot;
         private GameObject _fragileParent;
         private GameObject _movableParent;
@@ -130,6 +132,8 @@ namespace MaruSikaku.Gameplay
             _gridRoot = new GameObject("Grid");                     // グリッドのオブジェクト
             _gridRoot.transform.parent = _stageRoot.transform;      // ステージの親オブジェクトの子オブジェクトとする
             _gridRoot.AddComponent<Grid>();
+            _outerWallRoot = new GameObject("Outer Walll");         // 外壁
+            _outerWallRoot.transform.parent = _gridRoot.transform;
             _groundRoot = new GameObject("Ground");                 // 地面関連の親となるオブジェクト
             _groundRoot.transform.parent = _gridRoot.transform;     // グリッドのオブジェクトの子オブジェクトとする
             _tilemap = _groundRoot.AddComponent<Tilemap>();         // Tilemapを取得
@@ -140,8 +144,14 @@ namespace MaruSikaku.Gameplay
 
         private void BuildStageOutline(StageSaveData saveData)
         {
-            int xMin = -1, xMax = saveData.Size.x, yMin = -1, yMax = saveData.Size.y;
+            int xMin = -1, xMax = saveData.Size.x + 1, yMin = -1, yMax = saveData.Size.y + 1;
             StageBounds = Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+
+            // X=0およびX=Size.xに透明な壁を設置
+            var outerWallLeft = _outerWallRoot.AddComponent<EdgeCollider2D>();
+            outerWallLeft.SetPoints(new() { new(0, yMin), new(0, yMax) });
+            var outerWallRight = _outerWallRoot.AddComponent<EdgeCollider2D>();
+            outerWallRight.SetPoints(new() { new(saveData.Size.x, yMin), new(saveData.Size.x, yMax) });
         }
 
         private void InstantiateGround(StageSaveData stageData)
